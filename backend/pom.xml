@@ -48,6 +48,19 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Flyway: versiona a estrutura do banco de dados por migrations SQL.
+             Com isso, o Hibernate valida o schema em vez de alterá-lo automaticamente. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <!-- Suporte específico do Flyway para MySQL. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
         <!-- MySQL Connector: Driver JDBC para comunicação com o MySQL.
              O escopo 'runtime' significa que só é necessário em execução,
              não em tempo de compilação. -->
