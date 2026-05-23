@@ -20,9 +20,9 @@ O sistema permite:
 | Java | 17+ | Linguagem principal |
 | Spring Boot | 3.4.x | Framework web |
 | Spring Data JPA | - | Acesso a dados |
+| Flyway | - | Versionamento do banco |
 | Spring WebFlux | - | WebClient (HTTP reativo) |
 | MySQL | 8.0 | Banco de dados relacional |
-| Lombok | - | Redução de boilerplate |
 
 ### Frontend *(em desenvolvimento)*
 | Tecnologia | Finalidade |
@@ -130,6 +130,35 @@ Resposta esperada:
 
 > Os schedulers ainda não foram implementados. Por enquanto, a sincronização é manual para validar o caso de uso antes da automação.
 
+### 7. Sincronizar localizações manualmente
+
+Execute primeiro a sincronização de agentes, pois localizações de agentes inexistentes são ignoradas para evitar cadastro parcial:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/sync/agents
+curl -X POST http://localhost:8080/api/v1/sync/locations
+```
+
+Resposta esperada:
+```json
+{
+  "syncType": "LOCATIONS",
+  "status": "SUCCESS",
+  "processed": 4,
+  "created": 4,
+  "updated": 4,
+  "skipped": 0,
+  "startedAt": "2026-05-23T14:05:00Z",
+  "finishedAt": "2026-05-23T14:05:01Z"
+}
+```
+
+Regras aplicadas:
+- `accuracy > 50` descarta a leitura completamente.
+- `accuracy = null` é aceita.
+- `latitude`, `longitude`, `lastSeen` ou `agentId` ausentes geram `skipped`.
+- A idempotência do histórico usa `agent_id + recorded_at + source`, evitando duplicação ao rodar o endpoint mais de uma vez.
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -138,15 +167,18 @@ teams-tracking-system/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/media4all/tracking/
+│   │   │   │   ├── agent/      # Domínio e sincronização de agentes
+│   │   │   │   ├── checkin/    # Modelo de check-ins
+│   │   │   │   ├── common/     # Base comum e tratamento de erro
 │   │   │   │   ├── config/     # Configurações (WebClient, etc.)
-│   │   │   │   ├── controller/ # Endpoints REST
-│   │   │   │   ├── service/    # Regras de negócio
-│   │   │   │   ├── repository/ # Acesso a dados (JPA)
-│   │   │   │   ├── model/      # Entidades JPA
-│   │   │   │   ├── dto/        # Data Transfer Objects
-│   │   │   │   └── scheduler/  # Jobs de sincronização
+│   │   │   │   ├── external/   # Clients e DTOs da API externa
+│   │   │   │   ├── geofence/   # Modelo de geofences
+│   │   │   │   ├── health/     # Health check
+│   │   │   │   ├── location/   # Histórico de localizações
+│   │   │   │   └── sync/       # Auditoria e endpoints de sincronização
 │   │   │   └── resources/
-│   │   │       └── application.yml
+│   │   │       ├── application.yml
+│   │   │       └── db/migration/
 │   │   └── test/
 │   └── pom.xml
 ├── frontend/                   # Next.js (em desenvolvimento)
@@ -160,6 +192,30 @@ teams-tracking-system/
 ## 📚 Documentação
 
 - [Decisões Arquiteturais](docs/decisions.md) — Registro de decisões técnicas do projeto (ADRs).
+
+## 🧭 Decisões Técnicas
+
+- O backend foi iniciado antes do frontend para reduzir cedo o risco de integração, persistência e sincronização.
+- O schema do banco é controlado por Flyway, com Hibernate em modo `validate`.
+- `Agent`, `CheckIn` e `Geofence` usam IDs textuais porque a API externa retorna identificadores canônicos como `seed_agent_002`.
+- `Agent` guarda a localização atual e `LocationHistory` guarda o histórico de pontos válidos para rotas.
+- Timestamps de domínio usam `Instant`, pois a API retorna datas em UTC com sufixo `Z`.
+- A sincronização manual de agentes veio antes dos schedulers para validar o caso de uso de ponta a ponta.
+- O scheduler futuro deverá chamar o mesmo `AgentSyncService` usado pelo endpoint manual.
+- O acesso à API externa fica isolado atrás de gateways/clients em `external/`, sem misturar DTO externo com entidade JPA.
+- Retries de API externa são limitados e preparados para `429` com `Retry-After` e `503` com backoff exponencial e jitter.
+
+## ✅ Estado dos Requisitos Importantes
+
+| Requisito | Status |
+|---|---|
+| Utilizar Next.js 16 com App Router | Não iniciado |
+| Utilizar WebClient | Implementado |
+| Implementar os 4 schedulers obrigatórios | Não iniciado |
+| Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes e localizações |
+| Aplicar regras de negócio do documento | Parcial: upsert de agentes, idempotência e descarte de GPS impreciso |
+| Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes e localizações |
+| Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
 ## 🔐 Segurança
 

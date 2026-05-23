@@ -156,3 +156,79 @@ Implementar primeiro a sincronização manual de agentes em `POST /api/v1/sync/a
 - O backend já permite testar idempotência de agentes sem scheduler.
 - O scheduler futuro deve reutilizar `AgentSyncService` em vez de duplicar regra.
 - O retorno do endpoint usa um resumo enriquecido com processados, criados, atualizados, ignorados e horários, melhorando observabilidade durante o desafio.
+
+---
+
+## Decisão 005 — Ajustes técnicos antes de avançar nas próximas sincronizações
+
+**Data:** 2026-05-23
+
+**Status:** Aceita
+
+### Contexto
+
+Após implementar a sincronização manual de agentes, o projeto passou a ter uma fatia vertical real envolvendo controller, service, client externo, banco de dados e auditoria em `SyncExecution`. Antes de avançar para sincronização de localizações, check-ins, geofences e schedulers, foram identificados pequenos débitos técnicos que poderiam dificultar testes e manutenção.
+
+### Decisão
+
+Realizar uma rodada curta de estabilização técnica antes de implementar novas funcionalidades. Os ajustes aplicados foram:
+
+- mover `HealthController` para o pacote `health`, mantendo a organização por feature/domínio;
+- remover Lombok das entidades e do build para evitar dependência de annotation processing;
+- desligar `spring.jpa.show-sql` por padrão para reduzir ruído em logs;
+- extrair `ExternalAgentGateway` para que `AgentSyncService` dependa de uma interface, não diretamente do client HTTP;
+- manter `ExternalAgentClient` como implementação baseada em WebClient;
+- representar `Retry-After` como dado estruturado em `ExternalApiException`;
+- adicionar testes unitários para `AgentSyncService`.
+
+### Justificativa
+
+- A organização por feature torna o projeto mais previsível à medida que novos domínios forem adicionados.
+- Remover Lombok das entidades reduz risco de falhas de compilação causadas por configuração de annotation processing.
+- Desligar SQL verboso por padrão melhora legibilidade dos logs durante testes manuais e execução local.
+- `ExternalAgentGateway` melhora testabilidade e reduz acoplamento entre caso de uso e infraestrutura HTTP.
+- O scheduler futuro continuará chamando `AgentSyncService`, sem conhecer detalhes do WebClient.
+- `Retry-After` como campo estruturado torna o retry mais claro, menos frágil e mais fácil de testar.
+- Os testes unitários protegem as regras centrais da sincronização: criação, atualização por `externalId`, idempotência, auditoria de sucesso, auditoria de falha e conflito de identidade.
+
+### Consequências
+
+- O código ficou um pouco mais explícito, especialmente nas entidades sem Lombok, mas mais previsível para avaliação e manutenção.
+- A sincronização de agentes agora possui cobertura automatizada antes de servir como base para schedulers futuros.
+- Próximas integrações externas podem seguir o mesmo padrão: `External*Gateway`, client HTTP isolado, service transacional curto e testes unitários do caso de uso.
+
+---
+
+## Decisão 006 — Sincronização manual de localizações com estado atual e histórico
+
+**Data:** 2026-05-23
+
+**Status:** Aceita
+
+### Contexto
+
+O desafio exige rastreamento geográfico atual e histórico de rotas. O endpoint externo confirmado para localizações é `/api/v1/locations` e o retorno real observado possui apenas o formato `{ "data": [...] }`, sem metadados de paginação.
+
+### Decisão
+
+Implementar a sincronização manual de localizações em `POST /api/v1/sync/locations`, usando chamada única ao endpoint externo. O controller apenas delega para `LocationSyncService`, e um scheduler futuro deverá reutilizar esse mesmo service.
+
+### Justificativa
+
+- `ExternalLocationClient` chama `/api/v1/locations` sem barra final e sem paginação artificial, porque o contrato real não trouxe `page`, `totalPages`, `nextPage`, `cursor` ou `hasNext`.
+- `ExternalApiRetryPolicy` é reutilizado para manter tratamento consistente de `429` e `503`.
+- `Agent` guarda o estado operacional atual do agente, permitindo consultas rápidas para listagem e dashboard.
+- `LocationHistory` guarda o histórico de pontos válidos para rotas.
+- `lastSeen` da localização externa é usado como `recordedAt`, pois representa o horário do ponto recebido.
+- `LocationHistory` continua com `Long` porque a API não fornece ID próprio para localização atual.
+- A idempotência do histórico é garantida por `agent_id + recorded_at + source`.
+- Leituras com `accuracy > 50` são descartadas completamente: não atualizam `Agent` e não criam `LocationHistory`.
+- Leituras com `accuracy = null` são aceitas, porque a regra documentada fala apenas em descartar acurácia superior a 50 metros.
+- Localizações de agentes inexistentes são ignoradas (`skipped`) para evitar criação de agentes parciais.
+- A sincronização de localização não altera dados cadastrais do agente, como nome, equipe, telefone, e-mail, função ou status ativo.
+
+### Consequências
+
+- Rodar a sincronização de localizações mais de uma vez não deve duplicar pontos no histórico.
+- A sincronização de agentes deve ser executada antes da sincronização de localizações, pois localizações de agentes ausentes são ignoradas.
+- O histórico fica preparado para rotas futuras sem implementar cálculo Haversine neste momento.

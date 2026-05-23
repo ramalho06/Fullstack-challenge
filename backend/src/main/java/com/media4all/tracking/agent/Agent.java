@@ -9,16 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(
         name = "agents",
@@ -101,6 +95,46 @@ public class Agent extends BaseEntity {
         return externalId;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public BigDecimal getBattery() {
+        return battery;
+    }
+
+    public Instant getLastSeen() {
+        return lastSeen;
+    }
+
+    public BigDecimal getCurrentLatitude() {
+        return currentLatitude;
+    }
+
+    public BigDecimal getCurrentLongitude() {
+        return currentLongitude;
+    }
+
+    public String getCurrentAddress() {
+        return currentAddress;
+    }
+
+    public BigDecimal getCurrentAccuracy() {
+        return currentAccuracy;
+    }
+
+    public BigDecimal getCurrentSpeed() {
+        return currentSpeed;
+    }
+
+    public Instant getCurrentLocationUpdatedAt() {
+        return currentLocationUpdatedAt;
+    }
+
+    public AgentStatus getStatus() {
+        return status;
+    }
+
     public void setExternalId(String externalId) {
         this.externalId = externalId;
     }
@@ -139,6 +173,30 @@ public class Agent extends BaseEntity {
 
     public void setLastSeen(Instant lastSeen) {
         this.lastSeen = lastSeen;
+    }
+
+    public void setCurrentLatitude(BigDecimal currentLatitude) {
+        this.currentLatitude = currentLatitude;
+    }
+
+    public void setCurrentLongitude(BigDecimal currentLongitude) {
+        this.currentLongitude = currentLongitude;
+    }
+
+    public void setCurrentAddress(String currentAddress) {
+        this.currentAddress = currentAddress;
+    }
+
+    public void setCurrentAccuracy(BigDecimal currentAccuracy) {
+        this.currentAccuracy = currentAccuracy;
+    }
+
+    public void setCurrentSpeed(BigDecimal currentSpeed) {
+        this.currentSpeed = currentSpeed;
+    }
+
+    public void setCurrentLocationUpdatedAt(Instant currentLocationUpdatedAt) {
+        this.currentLocationUpdatedAt = currentLocationUpdatedAt;
     }
 
     public void setExternalCreatedAt(Instant externalCreatedAt) {

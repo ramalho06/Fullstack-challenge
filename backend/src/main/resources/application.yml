@@ -29,7 +29,7 @@ spring:
       # Flyway cria/altera o schema. O Hibernate apenas valida se as entidades
       # continuam compatíveis com as tabelas versionadas.
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     open-in-view: false
     properties:
       hibernate:

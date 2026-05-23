@@ -1,8 +1,10 @@
-package com.media4all.tracking.agent;
+package com.media4all.tracking.location;
 
+import com.media4all.tracking.agent.Agent;
+import com.media4all.tracking.agent.AgentRepository;
 import com.media4all.tracking.external.ExternalApiException;
-import com.media4all.tracking.external.agent.ExternalAgentDto;
-import com.media4all.tracking.external.agent.ExternalAgentGateway;
+import com.media4all.tracking.external.location.ExternalLocationDto;
+import com.media4all.tracking.external.location.ExternalLocationGateway;
 import com.media4all.tracking.sync.SyncExecution;
 import com.media4all.tracking.sync.SyncExecutionRepository;
 import com.media4all.tracking.sync.SyncStatus;
@@ -12,38 +14,44 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
 @Service
-public class AgentSyncService {
+public class LocationSyncService {
 
-    private final ExternalAgentGateway externalAgentGateway;
+    private static final BigDecimal MAX_ACCEPTED_ACCURACY = BigDecimal.valueOf(50);
+
+    private final ExternalLocationGateway externalLocationGateway;
     private final AgentRepository agentRepository;
-    private final AgentMapper agentMapper;
+    private final LocationHistoryRepository locationHistoryRepository;
+    private final LocationMapper locationMapper;
     private final SyncExecutionRepository syncExecutionRepository;
     private final TransactionTemplate transactionTemplate;
 
-    public AgentSyncService(
-            ExternalAgentGateway externalAgentGateway,
+    public LocationSyncService(
+            ExternalLocationGateway externalLocationGateway,
             AgentRepository agentRepository,
-            AgentMapper agentMapper,
+            LocationHistoryRepository locationHistoryRepository,
+            LocationMapper locationMapper,
             SyncExecutionRepository syncExecutionRepository,
             TransactionTemplate transactionTemplate
     ) {
-        this.externalAgentGateway = externalAgentGateway;
+        this.externalLocationGateway = externalLocationGateway;
         this.agentRepository = agentRepository;
-        this.agentMapper = agentMapper;
+        this.locationHistoryRepository = locationHistoryRepository;
+        this.locationMapper = locationMapper;
         this.syncExecutionRepository = syncExecutionRepository;
         this.transactionTemplate = transactionTemplate;
     }
 
-    public SyncResultResponse syncAgents() {
+    public SyncResultResponse syncLocations() {
         SyncExecution execution = createRunningExecution();
 
         try {
-            List<ExternalAgentDto> externalAgents = externalAgentGateway.fetchAllAgents();
-            SyncCounters counters = persistAgents(externalAgents);
+            List<ExternalLocationDto> externalLocations = externalLocationGateway.fetchAllLocations();
+            SyncCounters counters = persistLocations(externalLocations);
             SyncExecution finishedExecution = markSuccess(execution.getId(), counters);
             return SyncResultResponse.from(finishedExecution);
         } catch (RuntimeException exception) {
@@ -53,14 +61,14 @@ public class AgentSyncService {
                 throw exception;
             }
 
-            throw new AgentSyncException("Failed to synchronize agents", failedExecution.getId(), exception);
+            throw new LocationSyncException("Failed to synchronize locations", failedExecution.getId(), exception);
         }
     }
 
     private SyncExecution createRunningExecution() {
         return transactionTemplate.execute(status -> {
             SyncExecution execution = new SyncExecution();
-            execution.setSyncType(SyncType.AGENTS);
+            execution.setSyncType(SyncType.LOCATIONS);
             execution.setStatus(SyncStatus.RUNNING);
             execution.setStartedAt(Instant.now());
             execution.setItemsProcessed(0);
@@ -71,32 +79,36 @@ public class AgentSyncService {
         });
     }
 
-    private SyncCounters persistAgents(List<ExternalAgentDto> externalAgents) {
+    private SyncCounters persistLocations(List<ExternalLocationDto> externalLocations) {
         return transactionTemplate.execute(status -> {
             SyncCounters counters = new SyncCounters();
 
-            for (ExternalAgentDto dto : externalAgents) {
-                if (!isValid(dto)) {
+            for (ExternalLocationDto dto : externalLocations) {
+                counters.processed++;
+
+                if (!isValid(dto) || hasPoorAccuracy(dto)) {
                     counters.skipped++;
                     continue;
                 }
 
-                counters.processed++;
-                Agent agent = agentRepository.findByExternalId(dto.externalId()).orElse(null);
+                Agent agent = agentRepository.findById(dto.agentId()).orElse(null);
 
                 if (agent == null) {
-                    agentRepository.save(agentMapper.createFromExternal(dto));
-                    counters.created++;
+                    counters.skipped++;
                     continue;
                 }
 
-                if (!agent.getId().equals(dto.id())) {
-                    throw new IllegalStateException("Agent identity conflict for externalId "
-                            + dto.externalId() + ": persisted id=" + agent.getId() + ", external id=" + dto.id());
-                }
-
-                agentMapper.updateFromExternal(agent, dto);
+                locationMapper.updateAgentCurrentLocation(agent, dto);
                 counters.updated++;
+
+                if (!locationHistoryRepository.existsByAgentIdAndRecordedAtAndSource(
+                        dto.agentId(),
+                        dto.lastSeen(),
+                        LocationSource.GPS_SYNC
+                )) {
+                    locationHistoryRepository.save(locationMapper.toHistory(agent, dto));
+                    counters.created++;
+                }
             }
 
             return counters;
@@ -136,13 +148,16 @@ public class AgentSyncService {
         });
     }
 
-    private boolean isValid(ExternalAgentDto dto) {
+    private boolean isValid(ExternalLocationDto dto) {
         return dto != null
-                && StringUtils.hasText(dto.id())
-                && StringUtils.hasText(dto.externalId())
-                && StringUtils.hasText(dto.name())
-                && dto.active() != null
-                && dto.status() != null;
+                && StringUtils.hasText(dto.agentId())
+                && dto.latitude() != null
+                && dto.longitude() != null
+                && dto.lastSeen() != null;
+    }
+
+    private boolean hasPoorAccuracy(ExternalLocationDto dto) {
+        return dto.accuracy() != null && dto.accuracy().compareTo(MAX_ACCEPTED_ACCURACY) > 0;
     }
 
     private static class SyncCounters {

@@ -15,16 +15,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(
         name = "location_history",
@@ -73,4 +67,88 @@ public class LocationHistory extends BaseEntity {
 
     @Column(length = 120)
     private String externalEventId;
+
+    public Long getId() {
+        return id;
+    }
+
+    public Agent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public BigDecimal getAccuracy() {
+        return accuracy;
+    }
+
+    public void setAccuracy(BigDecimal accuracy) {
+        this.accuracy = accuracy;
+    }
+
+    public BigDecimal getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(BigDecimal speed) {
+        this.speed = speed;
+    }
+
+    public BigDecimal getBattery() {
+        return battery;
+    }
+
+    public void setBattery(BigDecimal battery) {
+        this.battery = battery;
+    }
+
+    public Instant getRecordedAt() {
+        return recordedAt;
+    }
+
+    public void setRecordedAt(Instant recordedAt) {
+        this.recordedAt = recordedAt;
+    }
+
+    public LocationSource getSource() {
+        return source;
+    }
+
+    public void setSource(LocationSource source) {
+        this.source = source;
+    }
+
+    public String getExternalEventId() {
+        return externalEventId;
+    }
+
+    public void setExternalEventId(String externalEventId) {
+        this.externalEventId = externalEventId;
+    }
 }

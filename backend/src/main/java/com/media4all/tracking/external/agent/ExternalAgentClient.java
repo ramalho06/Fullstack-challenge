@@ -1,6 +1,7 @@
 package com.media4all.tracking.external.agent;
 
 import com.media4all.tracking.external.ExternalApiException;
+import com.media4all.tracking.external.ExternalApiRetryPolicy;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -10,23 +11,28 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Component
-public class ExternalAgentClient {
+public class ExternalAgentClient implements ExternalAgentGateway {
 
     private static final int PAGE_SIZE = 50;
     private static final int MAX_PAGES = 100;
-    private static final int MAX_RETRIES = 3;
 
     private final WebClient webClient;
+    private final ExternalApiRetryPolicy retryPolicy;
 
-    public ExternalAgentClient(@Qualifier("externalApiWebClient") WebClient webClient) {
+    public ExternalAgentClient(
+            @Qualifier("externalApiWebClient") WebClient webClient,
+            ExternalApiRetryPolicy retryPolicy
+    ) {
         this.webClient = webClient;
+        this.retryPolicy = retryPolicy;
     }
 
     public List<ExternalAgentDto> fetchAllAgents() {
@@ -41,9 +47,7 @@ public class ExternalAgentClient {
                 break;
             }
 
-            String fingerprint = pageData.stream()
-                    .map(ExternalAgentDto::id)
-                    .reduce("", (left, right) -> left + "|" + right);
+            String fingerprint = pageFingerprint(pageData);
 
             // A API real retorna { data: [...] } e pode não expor metadados claros
             // de paginação. Se uma página repetir a anterior, paramos para evitar loop.
@@ -85,7 +89,7 @@ public class ExternalAgentClient {
                         })
                         .block(Duration.ofSeconds(30));
             } catch (ExternalApiException exception) {
-                if (!shouldRetry(exception) || attempt >= MAX_RETRIES) {
+                if (!retryPolicy.canRetry(exception, attempt)) {
                     throw exception;
                 }
 
@@ -101,21 +105,14 @@ public class ExternalAgentClient {
 
         if (statusCode == HttpStatus.TOO_MANY_REQUESTS.value()) {
             String retryAfter = headers.getFirst(HttpHeaders.RETRY_AFTER);
-            return new ExternalApiException(message + retryAfterMessage(retryAfter), statusCode, body);
+            return new ExternalApiException(message, statusCode, body, parseRetryAfter(retryAfter));
         }
 
         return new ExternalApiException(message, statusCode, body);
     }
 
-    private boolean shouldRetry(ExternalApiException exception) {
-        Integer status = exception.getHttpStatus();
-        return status != null
-                && (status == HttpStatus.TOO_MANY_REQUESTS.value()
-                || status == HttpStatus.SERVICE_UNAVAILABLE.value());
-    }
-
     private void sleepBeforeRetry(ExternalApiException exception, int attempt) {
-        long millis = retryDelay(exception, attempt).toMillis();
+        long millis = retryPolicy.delayFor(exception, attempt).toMillis();
 
         try {
             Thread.sleep(millis);
@@ -126,36 +123,28 @@ public class ExternalAgentClient {
         }
     }
 
-    private Duration retryDelay(ExternalApiException exception, int attempt) {
-        if (Integer.valueOf(HttpStatus.TOO_MANY_REQUESTS.value()).equals(exception.getHttpStatus())) {
-            Duration retryAfter = parseRetryAfter(exception.getMessage());
-            if (retryAfter != null) {
-                return retryAfter;
-            }
-        }
-
-        long baseMillis = (long) Math.pow(2, attempt - 1) * 1_000L;
-        long jitterMillis = ThreadLocalRandom.current().nextLong(100L, 500L);
-        return Duration.ofMillis(baseMillis + jitterMillis);
-    }
-
-    private Duration parseRetryAfter(String message) {
-        String marker = "Retry-After=";
-        int start = message.indexOf(marker);
-
-        if (start < 0) {
+    private Duration parseRetryAfter(String retryAfter) {
+        if (retryAfter == null || retryAfter.isBlank()) {
             return null;
         }
 
         try {
-            long seconds = Long.parseLong(message.substring(start + marker.length()).trim());
+            long seconds = Long.parseLong(retryAfter.trim());
             return Duration.ofSeconds(seconds);
         } catch (NumberFormatException exception) {
-            return null;
+            try {
+                ZonedDateTime retryAt = ZonedDateTime.parse(retryAfter);
+                Duration delay = Duration.between(ZonedDateTime.now(), retryAt);
+                return delay.isNegative() ? Duration.ZERO : delay;
+            } catch (DateTimeParseException ignored) {
+                return null;
+            }
         }
     }
 
-    private String retryAfterMessage(String retryAfter) {
-        return retryAfter == null || retryAfter.isBlank() ? "" : " Retry-After=" + retryAfter;
+    private String pageFingerprint(List<ExternalAgentDto> pageData) {
+        return pageData.stream()
+                .map(ExternalAgentDto::id)
+                .reduce("", (left, right) -> left + "|" + right);
     }
 }

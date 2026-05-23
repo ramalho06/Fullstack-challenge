@@ -10,15 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.Instant;
 
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(
         name = "sync_executions",
@@ -68,6 +62,10 @@ public class SyncExecution extends BaseEntity {
 
     public Long getId() {
         return id;
+    }
+
+    void setId(Long id) {
+        this.id = id;
     }
 
     public SyncType getSyncType() {
@@ -140,5 +138,9 @@ public class SyncExecution extends BaseEntity {
 
     public void setHttpStatus(Integer httpStatus) {
         this.httpStatus = httpStatus;
+    }
+
+    public Integer getHttpStatus() {
+        return httpStatus;
     }
 }

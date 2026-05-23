@@ -90,17 +90,6 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
-        <!-- ========== PRODUTIVIDADE ========== -->
-
-        <!-- Lombok: Gera automaticamente getters, setters, construtores,
-             builders, equals/hashCode, etc. Reduz boilerplate nas entidades
-             e DTOs. O escopo 'provided' significa que não vai para o JAR final. -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- ========== DESENVOLVIMENTO ========== -->
 
         <!-- DevTools: Hot-reload automático durante desenvolvimento.
@@ -126,19 +115,10 @@
 
     <build>
         <plugins>
-            <!-- Plugin do Spring Boot: empacota o JAR executável
-                 e configura o Lombok para não ser incluído no build final. -->
+            <!-- Plugin do Spring Boot: empacota o JAR executável. -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
             </plugin>
         </plugins>
     </build>
