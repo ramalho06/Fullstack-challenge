@@ -53,4 +53,76 @@ public class Geofence extends BaseEntity {
 
     @Column(nullable = false)
     private Instant syncedAt;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public GeofenceType getType() {
+        return type;
+    }
+
+    public void setType(GeofenceType type) {
+        this.type = type;
+    }
+
+    public String getCoordinatesJson() {
+        return coordinatesJson;
+    }
+
+    public void setCoordinatesJson(String coordinatesJson) {
+        this.coordinatesJson = coordinatesJson;
+    }
+
+    public Boolean getAlertOnEnter() {
+        return alertOnEnter;
+    }
+
+    public void setAlertOnEnter(Boolean alertOnEnter) {
+        this.alertOnEnter = alertOnEnter;
+    }
+
+    public Boolean getAlertOnExit() {
+        return alertOnExit;
+    }
+
+    public void setAlertOnExit(Boolean alertOnExit) {
+        this.alertOnExit = alertOnExit;
+    }
+
+    public String getAssignedTeams() {
+        return assignedTeams;
+    }
+
+    public void setAssignedTeams(String assignedTeams) {
+        this.assignedTeams = assignedTeams;
+    }
+
+    public Instant getSyncedAt() {
+        return syncedAt;
+    }
+
+    public void setSyncedAt(Instant syncedAt) {
+        this.syncedAt = syncedAt;
+    }
 }

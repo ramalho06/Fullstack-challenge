@@ -271,3 +271,36 @@ Implementar a sincronização manual em `POST /api/v1/sync/check-ins`, usando `C
 - Eventos operacionais com GPS ruim continuam persistidos em `checkins`.
 - O histórico de rotas fica mais completo quando check-ins trazem coordenadas confiáveis.
 - A incrementalidade fica preparada sem criar comportamento falso de token.
+
+---
+
+## Decisão 008 — Sincronização manual de geofences com GeoJSON bruto
+
+**Data:** 2026-05-23
+
+**Status:** Aceita
+
+### Contexto
+
+O endpoint externo real para geofences é `GET /api/v1/geofences`. Ele funciona sem barra final e retorna apenas `{ "data": [...] }`, sem metadados de paginação.
+
+### Decisão
+
+Implementar a sincronização manual em `POST /api/v1/sync/geofences`, usando chamada única ao endpoint externo. `GeofenceSyncService` concentra o caso de uso e deverá ser reutilizado por um scheduler futuro.
+
+### Justificativa
+
+- `ExternalGeofenceClient` usa `GET /api/v1/geofences`, sem barra final.
+- O retorno real não possui paginação, então não será criada paginação artificial.
+- `ExternalApiRetryPolicy` é reutilizado para manter tratamento consistente de `429` e `503`.
+- `Geofence.id` é `String` porque a API retorna IDs textuais como `seed_geo_003`.
+- O upsert é feito por `externalId`, conforme o contrato da API.
+- Conflitos em que `externalId` existente aponta para `id` diferente não são sobrescritos silenciosamente.
+- `coordinatesJson` é salvo como `TEXT`/`String`, sem normalização geométrica neste passo.
+- `assignedTeams` é salvo como `String`, sem criação de tabela de equipes.
+
+### Consequências
+
+- Rodar o sync de geofences mais de uma vez não duplica registros.
+- Geofencing visual, cálculo espacial e normalização de geometrias ficam para etapas futuras.
+- O modelo preserva o contrato externo e mantém baixo risco técnico para esta fase.

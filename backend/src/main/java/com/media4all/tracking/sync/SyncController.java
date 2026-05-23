@@ -2,6 +2,7 @@ package com.media4all.tracking.sync;
 
 import com.media4all.tracking.agent.AgentSyncService;
 import com.media4all.tracking.checkin.CheckInSyncService;
+import com.media4all.tracking.geofence.GeofenceSyncService;
 import com.media4all.tracking.location.LocationSyncService;
 import com.media4all.tracking.sync.dto.SyncResultResponse;
 import org.springframework.http.ResponseEntity;
@@ -16,15 +17,18 @@ public class SyncController {
     private final AgentSyncService agentSyncService;
     private final LocationSyncService locationSyncService;
     private final CheckInSyncService checkInSyncService;
+    private final GeofenceSyncService geofenceSyncService;
 
     public SyncController(
             AgentSyncService agentSyncService,
             LocationSyncService locationSyncService,
-            CheckInSyncService checkInSyncService
+            CheckInSyncService checkInSyncService,
+            GeofenceSyncService geofenceSyncService
     ) {
         this.agentSyncService = agentSyncService;
         this.locationSyncService = locationSyncService;
         this.checkInSyncService = checkInSyncService;
+        this.geofenceSyncService = geofenceSyncService;
     }
 
     @PostMapping("/agents")
@@ -40,5 +44,10 @@ public class SyncController {
     @PostMapping("/check-ins")
     public ResponseEntity<SyncResultResponse> syncCheckIns() {
         return ResponseEntity.ok(checkInSyncService.syncCheckIns());
+    }
+
+    @PostMapping("/geofences")
+    public ResponseEntity<SyncResultResponse> syncGeofences() {
+        return ResponseEntity.ok(geofenceSyncService.syncGeofences());
     }
 }

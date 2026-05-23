@@ -190,6 +190,33 @@ Regras aplicadas:
 - Check-ins com `accuracy > 50` são salvos, mas não geram `LocationHistory`.
 - Check-ins com coordenadas e `accuracy <= 50` ou `accuracy = null` podem gerar `LocationHistory`.
 
+### 9. Sincronizar geofences manualmente
+
+```bash
+curl -X POST http://localhost:8080/api/v1/sync/geofences
+```
+
+Resposta esperada:
+```json
+{
+  "syncType": "GEOFENCES",
+  "status": "SUCCESS",
+  "processed": 3,
+  "created": 3,
+  "updated": 0,
+  "skipped": 0,
+  "startedAt": "2026-05-23T14:15:00Z",
+  "finishedAt": "2026-05-23T14:15:01Z"
+}
+```
+
+Regras aplicadas:
+- O backend consome `GET /api/v1/geofences` da API externa.
+- O upsert é feito por `externalId`, preservando o `id` textual retornado pela API.
+- `coordinatesJson` é salvo bruto como `String`/`TEXT`, sem parse ou normalização geométrica.
+- `assignedTeams` é salvo como `String`, sem tabela de equipes.
+- Geofencing visual e mapa interativo continuam como diferenciais futuros.
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -234,6 +261,7 @@ teams-tracking-system/
 - A sincronização manual de agentes veio antes dos schedulers para validar o caso de uso de ponta a ponta.
 - O scheduler futuro deverá chamar o mesmo `AgentSyncService` usado pelo endpoint manual.
 - `SyncState` é usado na sincronização de check-ins para preparar incrementalidade sem inventar tokens locais.
+- Geofences são sincronizadas por `externalId`, mantendo `coordinatesJson` bruto para evitar complexidade espacial prematura.
 - O acesso à API externa fica isolado atrás de gateways/clients em `external/`, sem misturar DTO externo com entidade JPA.
 - Retries de API externa são limitados e preparados para `429` com `Retry-After` e `503` com backoff exponencial e jitter.
 
@@ -244,9 +272,9 @@ teams-tracking-system/
 | Utilizar Next.js 16 com App Router | Não iniciado |
 | Utilizar WebClient | Implementado |
 | Implementar os 4 schedulers obrigatórios | Não iniciado |
-| Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações e check-ins |
-| Aplicar regras de negócio do documento | Parcial: upsert de agentes, idempotência, descarte de GPS impreciso e sync de check-ins |
-| Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações e check-ins |
+| Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações, check-ins e geofences |
+| Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso e sync de check-ins |
+| Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
 ## 🔐 Segurança
