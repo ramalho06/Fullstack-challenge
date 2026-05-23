@@ -1,0 +1,35 @@
+# ===========================================
+# Docker Compose - Teams Tracking System
+# ===========================================
+# Sobe o banco de dados MySQL para desenvolvimento local.
+# Uso: docker compose up -d
+# ===========================================
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: tracking-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-challenge}
+      MYSQL_USER: ${MYSQL_USER:-trackinguser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-trackingpass}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootroot}
+    volumes:
+      # Volume nomeado para persistir os dados do MySQL entre restarts.
+      # Sem isso, os dados seriam perdidos ao parar o container.
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      # Verifica se o MySQL está aceitando conexões
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql_data:
+    driver: local
