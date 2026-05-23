@@ -136,11 +136,31 @@ public class SyncExecution extends BaseEntity {
         this.errorMessage = errorMessage;
     }
 
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
     public void setHttpStatus(Integer httpStatus) {
         this.httpStatus = httpStatus;
     }
 
     public Integer getHttpStatus() {
         return httpStatus;
+    }
+
+    public String getSyncTokenBefore() {
+        return syncTokenBefore;
+    }
+
+    public void setSyncTokenBefore(String syncTokenBefore) {
+        this.syncTokenBefore = syncTokenBefore;
+    }
+
+    public String getSyncTokenAfter() {
+        return syncTokenAfter;
+    }
+
+    public void setSyncTokenAfter(String syncTokenAfter) {
+        this.syncTokenAfter = syncTokenAfter;
     }
 }

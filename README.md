@@ -159,6 +159,37 @@ Regras aplicadas:
 - `latitude`, `longitude`, `lastSeen` ou `agentId` ausentes geram `skipped`.
 - A idempotência do histórico usa `agent_id + recorded_at + source`, evitando duplicação ao rodar o endpoint mais de uma vez.
 
+### 8. Sincronizar check-ins manualmente
+
+Execute primeiro a sincronização de agentes, pois check-ins de agentes inexistentes são ignorados:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/sync/agents
+curl -X POST http://localhost:8080/api/v1/sync/check-ins
+```
+
+Resposta esperada:
+```json
+{
+  "syncType": "CHECK_INS",
+  "status": "SUCCESS",
+  "processed": 10,
+  "created": 10,
+  "updated": 0,
+  "skipped": 0,
+  "startedAt": "2026-05-23T14:10:00Z",
+  "finishedAt": "2026-05-23T14:10:01Z"
+}
+```
+
+Regras aplicadas:
+- O backend consome `GET /api/v1/check-ins` da API externa.
+- O `POST /api/v1/sync/check-ins` externo não é usado para buscar eventos.
+- A idempotência usa `CheckIn.id` como PK e `externalEventId` como unique adicional.
+- `SyncState` está preparado para token incremental, mas a API atual não retorna `syncToken` funcional.
+- Check-ins com `accuracy > 50` são salvos, mas não geram `LocationHistory`.
+- Check-ins com coordenadas e `accuracy <= 50` ou `accuracy = null` podem gerar `LocationHistory`.
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -202,6 +233,7 @@ teams-tracking-system/
 - Timestamps de domínio usam `Instant`, pois a API retorna datas em UTC com sufixo `Z`.
 - A sincronização manual de agentes veio antes dos schedulers para validar o caso de uso de ponta a ponta.
 - O scheduler futuro deverá chamar o mesmo `AgentSyncService` usado pelo endpoint manual.
+- `SyncState` é usado na sincronização de check-ins para preparar incrementalidade sem inventar tokens locais.
 - O acesso à API externa fica isolado atrás de gateways/clients em `external/`, sem misturar DTO externo com entidade JPA.
 - Retries de API externa são limitados e preparados para `429` com `Retry-After` e `503` com backoff exponencial e jitter.
 
@@ -212,9 +244,9 @@ teams-tracking-system/
 | Utilizar Next.js 16 com App Router | Não iniciado |
 | Utilizar WebClient | Implementado |
 | Implementar os 4 schedulers obrigatórios | Não iniciado |
-| Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes e localizações |
-| Aplicar regras de negócio do documento | Parcial: upsert de agentes, idempotência e descarte de GPS impreciso |
-| Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes e localizações |
+| Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações e check-ins |
+| Aplicar regras de negócio do documento | Parcial: upsert de agentes, idempotência, descarte de GPS impreciso e sync de check-ins |
+| Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações e check-ins |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
 ## 🔐 Segurança

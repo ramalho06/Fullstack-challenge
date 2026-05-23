@@ -36,4 +36,40 @@ public class SyncState extends BaseEntity {
     private Instant lastSuccessfulSyncAt;
 
     private Instant lastAttemptAt;
+
+    public Long getId() {
+        return id;
+    }
+
+    public SyncType getSyncType() {
+        return syncType;
+    }
+
+    public void setSyncType(SyncType syncType) {
+        this.syncType = syncType;
+    }
+
+    public String getLastSyncToken() {
+        return lastSyncToken;
+    }
+
+    public void setLastSyncToken(String lastSyncToken) {
+        this.lastSyncToken = lastSyncToken;
+    }
+
+    public Instant getLastSuccessfulSyncAt() {
+        return lastSuccessfulSyncAt;
+    }
+
+    public void setLastSuccessfulSyncAt(Instant lastSuccessfulSyncAt) {
+        this.lastSuccessfulSyncAt = lastSuccessfulSyncAt;
+    }
+
+    public Instant getLastAttemptAt() {
+        return lastAttemptAt;
+    }
+
+    public void setLastAttemptAt(Instant lastAttemptAt) {
+        this.lastAttemptAt = lastAttemptAt;
+    }
 }

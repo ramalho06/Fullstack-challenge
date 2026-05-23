@@ -232,3 +232,42 @@ Implementar a sincronização manual de localizações em `POST /api/v1/sync/loc
 - Rodar a sincronização de localizações mais de uma vez não deve duplicar pontos no histórico.
 - A sincronização de agentes deve ser executada antes da sincronização de localizações, pois localizações de agentes ausentes são ignoradas.
 - O histórico fica preparado para rotas futuras sem implementar cálculo Haversine neste momento.
+
+---
+
+## Decisão 007 — Sincronização manual de check-ins com SyncState preparado para incrementalidade
+
+**Data:** 2026-05-23
+
+**Status:** Aceita
+
+### Contexto
+
+O endpoint externo real para buscar check-ins é `GET /api/v1/check-ins`. O endpoint externo `POST /api/v1/sync/check-ins` foi testado e não será usado para buscar eventos, pois não retornou os dados necessários para persistência local.
+
+O retorno real de `GET /api/v1/check-ins` possui o formato `{ "data": [...] }`, sem metadados funcionais de paginação e sem `syncToken` novo.
+
+### Decisão
+
+Implementar a sincronização manual em `POST /api/v1/sync/check-ins`, usando `CheckInSyncService` como caso de uso reutilizável por um scheduler futuro. `SyncState` passa a ser usado para preparar a arquitetura incremental, mas nenhum token local será inventado enquanto a API externa não retornar um token funcional.
+
+### Justificativa
+
+- `ExternalCheckInClient` usa `GET /api/v1/check-ins`, não o `POST /api/v1/sync/check-ins` externo.
+- O retorno real não possui paginação funcional, então a chamada é única.
+- O retorno real não traz `syncToken` novo; por isso, `SyncState.lastSyncToken` é preservado.
+- `SyncExecution.syncTokenBefore` e `SyncExecution.syncTokenAfter` registram tokens quando aplicável.
+- `CheckIn.id` é a PK canônica textual, como `seed_ci_010`.
+- `externalEventId` continua como identificador único adicional para idempotência.
+- Conflitos em que o mesmo `externalEventId` aponta para outro `id` não são sobrescritos silenciosamente.
+- Check-ins de agentes inexistentes são ignorados (`skipped`) para evitar criação de agentes parciais.
+- Check-ins podem gerar `LocationHistory` quando possuem coordenadas e precisão aceitável.
+- `accuracy > 50` não descarta o `CheckIn`; apenas impede a criação de `LocationHistory`.
+- O scheduler futuro deverá reutilizar `CheckInSyncService`.
+
+### Consequências
+
+- Rodar o sync de check-ins mais de uma vez não duplica check-ins.
+- Eventos operacionais com GPS ruim continuam persistidos em `checkins`.
+- O histórico de rotas fica mais completo quando check-ins trazem coordenadas confiáveis.
+- A incrementalidade fica preparada sem criar comportamento falso de token.

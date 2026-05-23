@@ -1,6 +1,7 @@
 package com.media4all.tracking.common.exception;
 
 import com.media4all.tracking.agent.AgentSyncException;
+import com.media4all.tracking.checkin.CheckInSyncException;
 import com.media4all.tracking.external.ExternalApiException;
 import com.media4all.tracking.location.LocationSyncException;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.of(
                         "LOCATION_SYNC_ERROR",
+                        exception.getMessage(),
+                        "syncExecutionId=" + exception.getSyncExecutionId()
+                ));
+    }
+
+    @ExceptionHandler(CheckInSyncException.class)
+    public ResponseEntity<ErrorResponse> handleCheckInSyncException(CheckInSyncException exception) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of(
+                        "CHECK_IN_SYNC_ERROR",
                         exception.getMessage(),
                         "syncExecutionId=" + exception.getSyncExecutionId()
                 ));
