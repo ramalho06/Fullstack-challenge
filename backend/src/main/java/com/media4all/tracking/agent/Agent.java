@@ -88,4 +88,64 @@ public class Agent extends BaseEntity {
     private Instant externalCreatedAt;
 
     private Instant externalUpdatedAt;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setRole(AgentRole role) {
+        this.role = role;
+    }
+
+    public void setTeam(String team) {
+        this.team = team;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public void setStatus(AgentStatus status) {
+        this.status = status;
+    }
+
+    public void setBattery(BigDecimal battery) {
+        this.battery = battery;
+    }
+
+    public void setLastSeen(Instant lastSeen) {
+        this.lastSeen = lastSeen;
+    }
+
+    public void setExternalCreatedAt(Instant externalCreatedAt) {
+        this.externalCreatedAt = externalCreatedAt;
+    }
+
+    public void setExternalUpdatedAt(Instant externalUpdatedAt) {
+        this.externalUpdatedAt = externalUpdatedAt;
+    }
 }

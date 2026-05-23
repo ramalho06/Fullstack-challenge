@@ -122,3 +122,37 @@ Também foi adotado `Instant` para campos temporais, porque a API retorna timest
 - Repositories de `Agent`, `CheckIn` e `Geofence` passam a usar `String` como tipo de ID.
 - Check-ins manuais futuros precisarão gerar IDs textuais locais, por exemplo `local_ci_<uuid>`.
 - Migrations futuras devem respeitar a separação entre IDs canônicos externos e IDs internos do sistema.
+
+---
+
+## Decisão 004 — Sincronização manual de agentes antes dos schedulers
+
+**Data:** 2026-05-23
+
+**Status:** Aceita
+
+### Contexto
+
+O desafio exige sincronização automática via schedulers, mas a integração com a API externa envolve paginação, rate limiting, instabilidade simulada, upsert e auditoria. Antes de automatizar esse fluxo, é melhor validar o caso de uso manualmente com um endpoint explícito.
+
+### Decisão
+
+Implementar primeiro a sincronização manual de agentes em `POST /api/v1/sync/agents`. O endpoint chama `AgentSyncService`, que concentra o caso de uso. O scheduler futuro deverá chamar o mesmo service, funcionando apenas como outro gatilho.
+
+### Justificativa
+
+- A sincronização manual valida o fluxo completo antes da automação.
+- `SyncController` fica fino e apenas delega a execução.
+- `AgentSyncService` concentra orquestração, upsert, idempotência e registro de auditoria.
+- `ExternalAgentClient` fica isolado para evitar acoplamento entre comunicação HTTP externa e domínio persistido.
+- `ExternalAgentDto` representa apenas o contrato externo e não é entidade JPA.
+- O upsert é feito por `externalId`, preservando `Agent.id` textual vindo da API.
+- `SyncExecution` registra auditoria tanto de sucesso quanto de falha.
+- As chamadas HTTP externas acontecem fora de transações de banco, evitando transações abertas durante I/O de rede.
+- Retries para `429` e `503` possuem limite para evitar loops infinitos.
+
+### Consequências
+
+- O backend já permite testar idempotência de agentes sem scheduler.
+- O scheduler futuro deve reutilizar `AgentSyncService` em vez de duplicar regra.
+- O retorno do endpoint usa um resumo enriquecido com processados, criados, atualizados, ignorados e horários, melhorando observabilidade durante o desafio.

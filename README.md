@@ -60,7 +60,8 @@ cp .env.example .env
 Edite o arquivo `.env` e configure:
 - Credenciais do MySQL
 - URL de conexão do banco
-- API Key da API externa
+- URL base da API externa em `EXTERNAL_API_BASE_URL`
+- API Key da API externa em `EXTERNAL_API_KEY`
 
 > ⚠️ **IMPORTANTE:** A API Key real **nunca** deve ser commitada no repositório. O arquivo `.env` está no `.gitignore`.
 
@@ -104,6 +105,30 @@ Resposta esperada:
   "service": "Teams Tracking API"
 }
 ```
+
+### 6. Sincronizar agentes manualmente
+
+Com o backend rodando e as variáveis `EXTERNAL_API_BASE_URL` e `EXTERNAL_API_KEY` configuradas no `.env`, execute:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/sync/agents
+```
+
+Resposta esperada:
+```json
+{
+  "syncType": "AGENTS",
+  "status": "SUCCESS",
+  "processed": 5,
+  "created": 5,
+  "updated": 0,
+  "skipped": 0,
+  "startedAt": "2026-05-23T14:00:00Z",
+  "finishedAt": "2026-05-23T14:00:01Z"
+}
+```
+
+> Os schedulers ainda não foram implementados. Por enquanto, a sincronização é manual para validar o caso de uso antes da automação.
 
 ## 📁 Estrutura do Projeto
 

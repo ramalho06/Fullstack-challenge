@@ -1,7 +1,7 @@
 package com.media4all.tracking.config;
 
+import com.media4all.tracking.external.ExternalApiProperties;
 import io.netty.channel.ChannelOption;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -30,12 +30,6 @@ import java.time.Duration;
 @Configuration
 public class WebClientConfig {
 
-    @Value("${external.api.base-url}")
-    private String baseUrl;
-
-    @Value("${external.api.key}")
-    private String apiKey;
-
     /**
      * Bean nomeado para o WebClient da API externa.
      *
@@ -44,7 +38,7 @@ public class WebClientConfig {
      * Para injetar, use: @Qualifier("externalApiWebClient")
      */
     @Bean(name = "externalApiWebClient")
-    public WebClient externalApiWebClient() {
+    public WebClient externalApiWebClient(ExternalApiProperties properties) {
 
         // Configura o cliente HTTP do Netty (camada de transporte)
         HttpClient httpClient = HttpClient.create()
@@ -55,9 +49,9 @@ public class WebClientConfig {
 
         return WebClient.builder()
                 // URL base: todas as chamadas serão relativas a esta URL
-                .baseUrl(baseUrl)
+                .baseUrl(properties.getBaseUrl())
                 // Header de autenticação enviado em TODAS as requisições
-                .defaultHeader("X-API-Key", apiKey)
+                .defaultHeader("X-API-Key", properties.getKey())
                 // Conecta o WebClient ao HttpClient do Netty configurado acima
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();

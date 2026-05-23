@@ -65,4 +65,80 @@ public class SyncExecution extends BaseEntity {
 
     @Column(length = 1024)
     private String syncTokenAfter;
+
+    public Long getId() {
+        return id;
+    }
+
+    public SyncType getSyncType() {
+        return syncType;
+    }
+
+    public void setSyncType(SyncType syncType) {
+        this.syncType = syncType;
+    }
+
+    public SyncStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(SyncStatus status) {
+        this.status = status;
+    }
+
+    public Instant getStartedAt() {
+        return startedAt;
+    }
+
+    public void setStartedAt(Instant startedAt) {
+        this.startedAt = startedAt;
+    }
+
+    public Instant getFinishedAt() {
+        return finishedAt;
+    }
+
+    public void setFinishedAt(Instant finishedAt) {
+        this.finishedAt = finishedAt;
+    }
+
+    public Integer getItemsProcessed() {
+        return itemsProcessed;
+    }
+
+    public void setItemsProcessed(Integer itemsProcessed) {
+        this.itemsProcessed = itemsProcessed;
+    }
+
+    public Integer getItemsCreated() {
+        return itemsCreated;
+    }
+
+    public void setItemsCreated(Integer itemsCreated) {
+        this.itemsCreated = itemsCreated;
+    }
+
+    public Integer getItemsUpdated() {
+        return itemsUpdated;
+    }
+
+    public void setItemsUpdated(Integer itemsUpdated) {
+        this.itemsUpdated = itemsUpdated;
+    }
+
+    public Integer getItemsSkipped() {
+        return itemsSkipped;
+    }
+
+    public void setItemsSkipped(Integer itemsSkipped) {
+        this.itemsSkipped = itemsSkipped;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public void setHttpStatus(Integer httpStatus) {
+        this.httpStatus = httpStatus;
+    }
 }
