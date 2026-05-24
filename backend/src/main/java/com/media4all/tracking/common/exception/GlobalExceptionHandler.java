@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException exception) {
+    public ResponseEntity<ApiErrorResponse> handleResourceNotFoundException(ResourceNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of(
+                .body(ApiErrorResponse.of(
                         "RESOURCE_NOT_FOUND",
                         exception.getMessage(),
                         exception.getResourceName() + " id=" + exception.getResourceId()
@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException exception) {
+    public ResponseEntity<ApiErrorResponse> handleValidationException(MethodArgumentNotValidException exception) {
         String details = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -35,30 +35,36 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(ErrorResponse.of("VALIDATION_ERROR", "Request validation failed", details));
+                .body(ApiErrorResponse.of("VALIDATION_ERROR", "Validation failed", details));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of("BAD_REQUEST", exception.getMessage(), null));
+                .body(ApiErrorResponse.of("BAD_REQUEST", exception.getMessage(), null));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflictException(ConflictException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiErrorResponse.of("CONFLICT", exception.getMessage(), null));
     }
 
     @ExceptionHandler(ExternalApiException.class)
-    public ResponseEntity<ErrorResponse> handleExternalApiException(ExternalApiException exception) {
+    public ResponseEntity<ApiErrorResponse> handleExternalApiException(ExternalApiException exception) {
         HttpStatus status = exception.getHttpStatus() != null
                 && exception.getHttpStatus() == HttpStatus.TOO_MANY_REQUESTS.value()
                 ? HttpStatus.TOO_MANY_REQUESTS
                 : HttpStatus.BAD_GATEWAY;
 
         return ResponseEntity.status(status)
-                .body(ErrorResponse.of("EXTERNAL_API_ERROR", exception.getMessage(), exception.getResponseBody()));
+                .body(ApiErrorResponse.of("EXTERNAL_API_ERROR", exception.getMessage(), exception.getResponseBody()));
     }
 
     @ExceptionHandler(AgentSyncException.class)
-    public ResponseEntity<ErrorResponse> handleAgentSyncException(AgentSyncException exception) {
+    public ResponseEntity<ApiErrorResponse> handleAgentSyncException(AgentSyncException exception) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(
+                .body(ApiErrorResponse.of(
                         "AGENT_SYNC_ERROR",
                         exception.getMessage(),
                         "syncExecutionId=" + exception.getSyncExecutionId()
@@ -66,9 +72,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(LocationSyncException.class)
-    public ResponseEntity<ErrorResponse> handleLocationSyncException(LocationSyncException exception) {
+    public ResponseEntity<ApiErrorResponse> handleLocationSyncException(LocationSyncException exception) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(
+                .body(ApiErrorResponse.of(
                         "LOCATION_SYNC_ERROR",
                         exception.getMessage(),
                         "syncExecutionId=" + exception.getSyncExecutionId()
@@ -76,9 +82,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CheckInSyncException.class)
-    public ResponseEntity<ErrorResponse> handleCheckInSyncException(CheckInSyncException exception) {
+    public ResponseEntity<ApiErrorResponse> handleCheckInSyncException(CheckInSyncException exception) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(
+                .body(ApiErrorResponse.of(
                         "CHECK_IN_SYNC_ERROR",
                         exception.getMessage(),
                         "syncExecutionId=" + exception.getSyncExecutionId()
@@ -86,9 +92,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(GeofenceSyncException.class)
-    public ResponseEntity<ErrorResponse> handleGeofenceSyncException(GeofenceSyncException exception) {
+    public ResponseEntity<ApiErrorResponse> handleGeofenceSyncException(GeofenceSyncException exception) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(
+                .body(ApiErrorResponse.of(
                         "GEOFENCE_SYNC_ERROR",
                         exception.getMessage(),
                         "syncExecutionId=" + exception.getSyncExecutionId()
@@ -96,8 +102,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception exception) {
+    public ResponseEntity<ApiErrorResponse> handleGenericException(Exception exception) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of("INTERNAL_SERVER_ERROR", "Unexpected internal error", null));
+                .body(ApiErrorResponse.of("INTERNAL_ERROR", "Unexpected internal error", null));
     }
 }

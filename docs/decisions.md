@@ -382,3 +382,45 @@ Implementar endpoints de consulta e gestão usando DTOs de request e response. O
 - Agentes locais podem ser criados sem conflitar com IDs canônicos da API externa.
 - O histórico de check-ins e localizações permanece preservado mesmo após soft delete de agente.
 - Ainda será necessário implementar a rota do dia e o cálculo de distância em uma etapa específica.
+
+---
+
+## Decisão 011 — Padronização de erros da API pública
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+Com os endpoints públicos de consulta, CRUD de agentes e check-in manual expostos para o frontend, o contrato de erro precisa ser previsível. Respostas montadas de forma ad hoc dificultam tratamento no frontend e deixam a API menos clara durante avaliação técnica.
+
+### Decisão
+
+Padronizar respostas de erro com `ApiErrorResponse`, sempre no formato:
+
+```json
+{
+  "error": {
+    "code": "RESOURCE_NOT_FOUND",
+    "message": "Agent not found",
+    "details": "Agent id=seed_agent_999"
+  }
+}
+```
+
+### Justificativa
+
+- Recursos inexistentes retornam `404` com `RESOURCE_NOT_FOUND`.
+- Erros de validação retornam `422` com `VALIDATION_ERROR`.
+- Requisições inválidas retornam `400` com `BAD_REQUEST`.
+- Conflitos de domínio passam a ter suporte explícito com `409` e `CONFLICT`.
+- Erros inesperados retornam `500` com `INTERNAL_ERROR`, sem expor stacktrace.
+- `ExternalApiException` mantém tratamento específico para falhas externas, incluindo `429` quando a API externa aplica rate limiting.
+- Um DTO explícito de erro facilita testes e consumo pelo frontend.
+
+### Consequências
+
+- O frontend pode tratar erros por `error.code`, sem depender de texto livre.
+- Novos conflitos de domínio podem usar `ConflictException` sem alterar o contrato HTTP.
+- A API pública fica mais estável antes da implementação da rota do dia e do cálculo Haversine.

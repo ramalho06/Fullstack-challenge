@@ -258,6 +258,8 @@ curl "http://localhost:8080/api/v1/agents?active=true&status=ONLINE&page=0&size=
 curl http://localhost:8080/api/v1/agents/seed_agent_001
 ```
 
+Filtros suportados: `active`, `status`, `role`, `team`, `search`, `page`, `size` e `sort`.
+
 Criar agente local:
 
 ```bash
@@ -317,6 +319,8 @@ curl "http://localhost:8080/api/v1/check-ins?page=0&size=20"
 curl "http://localhost:8080/api/v1/check-ins?agentId=seed_agent_001&type=CHECKIN&page=0&size=20"
 ```
 
+Filtros suportados: `agentId`, `type`, `source`, `page`, `size` e `sort`.
+
 Registrar check-in manual:
 
 ```bash
@@ -342,6 +346,8 @@ Check-ins manuais recebem `id` no formato `local_ci_<uuid>`, `source=MANUAL` e `
 curl "http://localhost:8080/api/v1/geofences?page=0&size=20"
 curl "http://localhost:8080/api/v1/geofences?type=CIRCLE&page=0&size=20"
 ```
+
+Filtros suportados: `type`, `page`, `size` e `sort`.
 
 Geofences têm consulta paginada, mas CRUD fica fora deste passo. O `coordinatesJson` continua sendo entregue como texto bruto para o frontend interpretar futuramente no mapa.
 
