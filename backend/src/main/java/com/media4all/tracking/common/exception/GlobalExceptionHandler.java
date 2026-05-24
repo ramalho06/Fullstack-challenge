@@ -5,6 +5,7 @@ import com.media4all.tracking.checkin.CheckInSyncException;
 import com.media4all.tracking.external.ExternalApiException;
 import com.media4all.tracking.geofence.GeofenceSyncException;
 import com.media4all.tracking.location.LocationSyncException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -67,6 +68,16 @@ public class GlobalExceptionHandler {
                         "BAD_REQUEST",
                         "Invalid request parameter",
                         exception.getName()
+                ));
+    }
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ApiErrorResponse> handlePropertyReferenceException(PropertyReferenceException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorResponse.of(
+                        "BAD_REQUEST",
+                        "Invalid sort property",
+                        exception.getPropertyName()
                 ));
     }
 

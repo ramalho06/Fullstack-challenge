@@ -437,6 +437,25 @@ teams-tracking-system/
 
 - [Decisões Arquiteturais](docs/decisions.md) — Registro de decisões técnicas do projeto (ADRs).
 
+## 📖 Documentação da API
+
+A documentação OpenAPI é gerada via `springdoc-openapi` e fica disponível com o backend em execução:
+
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+
+Os endpoints estão agrupados por domínio:
+- Health
+- Agents
+- Locations
+- Check-ins
+- Geofences
+- Routes
+- Sync commands
+- Sync monitoring
+
+O Swagger documenta DTOs públicos, exemplos dos principais endpoints e o contrato padronizado de erro (`ApiErrorResponse`). Ele não expõe `EXTERNAL_API_KEY`, variáveis de ambiente sensíveis ou headers internos. A API ainda não possui autenticação neste desafio, por isso nenhum `securityScheme` foi configurado.
+
 ## 🧭 Decisões Técnicas
 
 - O backend foi iniciado antes do frontend para reduzir cedo o risco de integração, persistência e sincronização.
@@ -466,6 +485,18 @@ teams-tracking-system/
 | Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
 | Monitoramento operacional da sincronização | Implementado |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
+
+## 🌟 Diferenciais Implementados
+
+| Diferencial | Status |
+|---|---|
+| Testes automatizados | Implementado |
+| Swagger/OpenAPI | Implementado |
+| Dockerização do MySQL | Implementado |
+| Circuit Breaker com Resilience4j | Não iniciado |
+| WebSocket/SSE | Não iniciado |
+| Mapa interativo com Leaflet | Não iniciado |
+| Geofencing visual | Não iniciado |
 
 ## 🔐 Segurança
 

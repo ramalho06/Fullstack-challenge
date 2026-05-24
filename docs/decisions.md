@@ -497,3 +497,38 @@ Implementar endpoints de monitoramento em `GET /api/v1/sync/executions`, `GET /a
 - O avaliador consegue verificar rapidamente quando as sincronizações rodaram e se falharam.
 - A regra de cálculo de status fica isolada e testável.
 - Nenhuma regra de sincronização ou scheduler precisou ser alterada.
+
+---
+
+## Decisão 014 — Documentação da API com Swagger/OpenAPI
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+O backend já possui endpoints públicos para CRUD de agentes, consultas operacionais, sincronizações manuais, rota diária e monitoramento de sync. Para facilitar avaliação técnica e preparar o consumo pelo frontend, o contrato HTTP precisa estar navegável e documentado.
+
+### Decisão
+
+Adicionar documentação OpenAPI com `springdoc-openapi-starter-webmvc-ui`, mantendo Swagger UI em `/swagger-ui/index.html` e o JSON OpenAPI em `/v3/api-docs`.
+
+### Justificativa
+
+- A aplicação expõe controllers Spring MVC, portanto foi usado o starter WebMVC do springdoc.
+- A versão `2.7.0` foi fixada após validação local com Spring Boot `3.4.1`; versões mais novas do springdoc apresentaram conflito de resource handler com o parser de paths do Spring MVC neste projeto.
+- Endpoints foram agrupados por domínio: Health, Agents, Locations, Check-ins, Geofences, Routes, Sync commands e Sync monitoring.
+- Endpoints de sincronização manual também foram documentados porque são parte importante do fluxo de integração.
+- Endpoints de monitoramento foram documentados para evidenciar maturidade operacional.
+- `ApiErrorResponse` foi documentado como contrato padrão de erro.
+- Exemplos foram adicionados apenas nos endpoints principais para manter a documentação útil sem excesso de anotações.
+- Não foi configurado `securityScheme`, porque o backend ainda não possui autenticação.
+- Segredos, API Key externa e variáveis de ambiente não são expostos no Swagger.
+
+### Consequências
+
+- O avaliador pode navegar e testar a API pelo Swagger UI.
+- O frontend passa a ter uma referência clara de requests, responses e erros.
+- A documentação segue o contrato público de DTOs, sem expor entidades JPA como modelo da API.
+- Uma futura autenticação poderá adicionar `securityScheme` de forma explícita quando existir implementação real.

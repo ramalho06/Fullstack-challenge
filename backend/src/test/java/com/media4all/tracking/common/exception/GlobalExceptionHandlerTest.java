@@ -1,10 +1,13 @@
 package com.media4all.tracking.common.exception;
 
+import com.media4all.tracking.agent.Agent;
 import com.media4all.tracking.external.ExternalApiException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -14,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -65,6 +70,15 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void returnsBadRequestForInvalidSortProperty() throws Exception {
+        mockMvc.perform(get("/test-errors/invalid-sort"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error.code").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.error.message").value("Invalid sort property"))
+                .andExpect(jsonPath("$.error.details").value("string"));
+    }
+
+    @Test
     void returnsConflictForConflictException() throws Exception {
         mockMvc.perform(get("/test-errors/conflict"))
                 .andExpect(status().isConflict())
@@ -105,6 +119,11 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/bad-request")
         void badRequest() {
             throw new IllegalArgumentException("Invalid request");
+        }
+
+        @GetMapping("/invalid-sort")
+        void invalidSort() {
+            throw new PropertyReferenceException("string", TypeInformation.of(Agent.class), List.of());
         }
 
         @GetMapping("/conflict")

@@ -3,24 +3,39 @@ package com.media4all.tracking.sync.dto;
 import com.media4all.tracking.sync.SyncExecution;
 import com.media4all.tracking.sync.SyncStatus;
 import com.media4all.tracking.sync.SyncType;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 
+@Schema(description = "Execução individual de sincronização")
 public record SyncExecutionResponse(
+        @Schema(example = "0")
         Long id,
         SyncType syncType,
         SyncStatus status,
+        @Schema(example = "string")
         Instant startedAt,
+        @Schema(example = "string")
         Instant finishedAt,
+        @Schema(example = "0")
         Integer itemsProcessed,
+        @Schema(example = "0")
         Integer itemsCreated,
+        @Schema(example = "0")
         Integer itemsUpdated,
+        @Schema(example = "0")
         Integer itemsSkipped,
+        @Schema(example = "string")
         String errorMessage,
+        @Schema(example = "0")
         Integer httpStatus,
+        @Schema(example = "string")
         String syncTokenBefore,
+        @Schema(example = "string")
         String syncTokenAfter,
+        @Schema(example = "string")
         Instant createdAt,
+        @Schema(example = "string")
         Instant updatedAt
 ) {
 
