@@ -53,7 +53,7 @@ external:
 # pelos endpoints manuais em /api/v1/sync/*.
 app:
   schedulers:
-    enabled: true
+    enabled: ${APP_SCHEDULERS_ENABLED:true}
     agents-fixed-delay-ms: 600000
     agents-initial-delay-ms: 30000
     locations-fixed-delay-ms: 60000

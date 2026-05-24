@@ -296,6 +296,18 @@ app:
 
 `app.schedulers.enabled=false` desabilita os gatilhos automáticos. Cada rotina usa um `AtomicBoolean` próprio para impedir sobreposição local da mesma sincronização.
 
+Também é possível desligar os schedulers por variável de ambiente:
+
+```bash
+APP_SCHEDULERS_ENABLED=false
+```
+
+Ou ao rodar localmente:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--app.schedulers.enabled=false"
+```
+
 ### 11. Endpoints de consulta e gestão
 
 O backend expõe DTOs para o frontend e não retorna entidades JPA diretamente. Endpoints paginados usam um DTO próprio com `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last` e `empty`.
@@ -477,6 +489,7 @@ teams-tracking-system/
 │   └── pom.xml
 ├── frontend/                   # Next.js (em desenvolvimento)
 ├── docs/                       # Documentação e decisões técnicas
+│   ├── api-examples.md
 │   └── decisions.md
 ├── docker-compose.yml          # Serviços de infraestrutura
 ├── .env.example                # Template de variáveis de ambiente
@@ -486,6 +499,7 @@ teams-tracking-system/
 ## 📚 Documentação
 
 - [Decisões Arquiteturais](docs/decisions.md) — Registro de decisões técnicas do projeto (ADRs).
+- [Exemplos de uso da API](docs/api-examples.md) — Coleção de comandos `curl` para validar os endpoints principais.
 
 ## 📖 Documentação da API
 
@@ -506,6 +520,30 @@ Os endpoints estão agrupados por domínio:
 
 O Swagger documenta DTOs públicos, exemplos dos principais endpoints e o contrato padronizado de erro (`ApiErrorResponse`). Ele não expõe `EXTERNAL_API_KEY`, variáveis de ambiente sensíveis ou headers internos. A API ainda não possui autenticação neste desafio, por isso nenhum `securityScheme` foi configurado.
 
+## 🧪 Fluxo recomendado de validação
+
+Para validar o backend do zero:
+
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+Depois, em outro terminal:
+
+```bash
+curl "http://localhost:8080/api/health"
+curl -X POST "http://localhost:8080/api/v1/sync/agents"
+curl -X POST "http://localhost:8080/api/v1/sync/locations"
+curl -X POST "http://localhost:8080/api/v1/sync/check-ins"
+curl -X POST "http://localhost:8080/api/v1/sync/geofences"
+curl "http://localhost:8080/api/v1/agents?page=0&size=20"
+curl "http://localhost:8080/api/v1/locations"
+curl "http://localhost:8080/api/v1/sync/status"
+```
+
+Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os principais casos de uso ficam verificáveis.
+
 ## 🧭 Decisões Técnicas
 
 - O backend foi iniciado antes do frontend para reduzir cedo o risco de integração, persistência e sincronização.
@@ -520,6 +558,14 @@ O Swagger documenta DTOs públicos, exemplos dos principais endpoints e o contra
 - Geofences são sincronizadas por `externalId`, mantendo `coordinatesJson` bruto para evitar complexidade espacial prematura.
 - O acesso à API externa fica isolado atrás de gateways/clients em `external/`, sem misturar DTO externo com entidade JPA.
 - Retries de API externa são limitados e preparados para `429` com `Retry-After` e `503` com backoff exponencial e jitter.
+
+## ⚠️ Limitações conhecidas
+
+- O frontend ainda não foi implementado; os badges e a estrutura indicam a stack planejada.
+- `SyncState` prepara a sincronização incremental por `syncToken`, mas a API externa testada não retornou um token funcional para check-ins.
+- Circuit Breaker com Resilience4j não foi implementado; o retry atual é limitado e cobre `429` e `503`.
+- WebSocket/SSE não foi implementado.
+- Leaflet, mapa interativo e geofencing visual ainda são diferenciais futuros.
 
 ## ✅ Estado dos Requisitos Importantes
 

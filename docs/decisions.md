@@ -566,3 +566,34 @@ Adicionar um `Dockerfile` multi-stage para o backend e ajustar o `docker-compose
 - O ambiente Docker fica mais próximo de uma implantação real simples.
 - A execução local fora do Docker continua possível usando as mesmas variáveis de ambiente.
 - Um serviço de frontend poderá ser adicionado ao compose depois, quando a aplicação Next.js existir.
+
+---
+
+## Decisão 016 — Congelamento do backend antes do frontend
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+O backend já cobre as funcionalidades obrigatórias principais do desafio: sincronizações manuais e automáticas, CRUD de agentes, consultas públicas, check-ins manuais, rota do dia com Haversine, monitoramento operacional, documentação OpenAPI, tratamento padronizado de erros e execução containerizada com MySQL.
+
+### Decisão
+
+Considerar o backend congelado para novas features antes do início do frontend. A partir deste ponto, alterações no backend devem se limitar a correções de bug crítico, documentação ou pequenos ajustes necessários para consumo pelo frontend.
+
+### Justificativa
+
+- O backend foi revisado antes do início do frontend para reduzir risco de integração.
+- A validação final inclui testes automatizados, Docker, Swagger, OpenAPI JSON, Flyway, endpoints principais e documentação.
+- `docs/api-examples.md` centraliza comandos de uso da API sem deixar o README excessivamente longo.
+- Limitações conhecidas foram documentadas de forma explícita para transparência técnica.
+- Congelar contratos evita que o frontend seja construído sobre uma API instável.
+
+### Consequências
+
+- O próximo foco do projeto passa a ser o frontend.
+- Novas features backend ficam fora do escopo imediato.
+- Bugs críticos e ajustes pequenos continuam permitidos.
+- Mudanças de contrato HTTP devem ser evitadas, salvo necessidade clara.
