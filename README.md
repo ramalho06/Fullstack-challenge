@@ -217,6 +217,35 @@ Regras aplicadas:
 - `assignedTeams` é salvo como `String`, sem tabela de equipes.
 - Geofencing visual e mapa interativo continuam como diferenciais futuros.
 
+### 10. Schedulers automáticos
+
+Os quatro schedulers obrigatórios usam os mesmos services dos endpoints manuais:
+
+| Scheduler | Frequência | Initial delay |
+|---|---:|---:|
+| Agents | 10 minutos | 30 segundos |
+| Locations | 1 minuto | 45 segundos |
+| Check-ins | 2 minutos | 60 segundos |
+| Geofences | 30 minutos | 90 segundos |
+
+As frequências são configuráveis em `application.yml`:
+
+```yaml
+app:
+  schedulers:
+    enabled: true
+    agents-fixed-delay-ms: 600000
+    agents-initial-delay-ms: 30000
+    locations-fixed-delay-ms: 60000
+    locations-initial-delay-ms: 45000
+    check-ins-fixed-delay-ms: 120000
+    check-ins-initial-delay-ms: 60000
+    geofences-fixed-delay-ms: 1800000
+    geofences-initial-delay-ms: 90000
+```
+
+`app.schedulers.enabled=false` desabilita os gatilhos automáticos. Cada rotina usa um `AtomicBoolean` próprio para impedir sobreposição local da mesma sincronização.
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -259,7 +288,8 @@ teams-tracking-system/
 - `Agent` guarda a localização atual e `LocationHistory` guarda o histórico de pontos válidos para rotas.
 - Timestamps de domínio usam `Instant`, pois a API retorna datas em UTC com sufixo `Z`.
 - A sincronização manual de agentes veio antes dos schedulers para validar o caso de uso de ponta a ponta.
-- O scheduler futuro deverá chamar o mesmo `AgentSyncService` usado pelo endpoint manual.
+- Os schedulers automáticos reutilizam os mesmos services dos endpoints manuais, sem duplicar regra de negócio.
+- Cada scheduler usa `AtomicBoolean` para impedir sobreposição local da mesma rotina.
 - `SyncState` é usado na sincronização de check-ins para preparar incrementalidade sem inventar tokens locais.
 - Geofences são sincronizadas por `externalId`, mantendo `coordinatesJson` bruto para evitar complexidade espacial prematura.
 - O acesso à API externa fica isolado atrás de gateways/clients em `external/`, sem misturar DTO externo com entidade JPA.
@@ -271,7 +301,7 @@ teams-tracking-system/
 |---|---|
 | Utilizar Next.js 16 com App Router | Não iniciado |
 | Utilizar WebClient | Implementado |
-| Implementar os 4 schedulers obrigatórios | Não iniciado |
+| Implementar os 4 schedulers obrigatórios | Implementado |
 | Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações, check-ins e geofences |
 | Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso e sync de check-ins |
 | Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |

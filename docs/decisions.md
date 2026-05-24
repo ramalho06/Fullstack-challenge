@@ -304,3 +304,42 @@ Implementar a sincronização manual em `POST /api/v1/sync/geofences`, usando ch
 - Rodar o sync de geofences mais de uma vez não duplica registros.
 - Geofencing visual, cálculo espacial e normalização de geometrias ficam para etapas futuras.
 - O modelo preserva o contrato externo e mantém baixo risco técnico para esta fase.
+
+---
+
+## Decisão 009 — Schedulers automáticos reutilizando os services de sincronização manual
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+O desafio exige quatro schedulers automáticos: agentes, localizações, check-ins e geofences. Antes desta etapa, cada sincronização já existia como endpoint manual e possuía um service próprio com regra de negócio, persistência, retries e auditoria em `SyncExecution`.
+
+### Decisão
+
+Implementar os quatro schedulers como gatilhos automáticos que reutilizam os mesmos services dos endpoints manuais:
+
+- `AgentSyncService`;
+- `LocationSyncService`;
+- `CheckInSyncService`;
+- `GeofenceSyncService`.
+
+Os intervalos e delays iniciais são configuráveis por `application.yml`, sob o prefixo `app.schedulers`.
+
+### Justificativa
+
+- Nenhuma regra de negócio é duplicada no scheduler.
+- `SyncExecution` continua sendo responsabilidade dos services de sincronização.
+- `initialDelay` evita disparar todos os syncs ao mesmo tempo na subida da aplicação.
+- `AtomicBoolean` impede sobreposição da mesma rotina dentro da instância atual.
+- Falhas são logadas pelo scheduler e não derrubam a aplicação.
+- `app.schedulers.enabled=false` permite desabilitar os gatilhos automáticos sem remover os endpoints manuais.
+- ShedLock não foi usado porque o projeto roda em instância única neste momento.
+
+### Consequências
+
+- A aplicação passa a sincronizar automaticamente dados externos.
+- Endpoints manuais continuam disponíveis para testes e reprocessamento controlado.
+- Em ambiente com múltiplas instâncias, ShedLock ou outro lock distribuído seria a evolução natural para evitar execução duplicada entre nós diferentes.
