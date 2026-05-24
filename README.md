@@ -367,6 +367,42 @@ Filtros suportados: `type`, `page`, `size` e `sort`.
 
 Geofences têm consulta paginada, mas CRUD fica fora deste passo. O `coordinatesJson` continua sendo entregue como texto bruto para o frontend interpretar futuramente no mapa.
 
+### 12. Monitoramento operacional das sincronizações
+
+O backend expõe endpoints de leitura para acompanhar histórico, últimas execuções e configuração dos schedulers.
+
+Listar execuções com paginação:
+
+```bash
+curl "http://localhost:8080/api/v1/sync/executions?page=0&size=20&sort=startedAt,desc"
+```
+
+Filtrar por tipo e status:
+
+```bash
+curl "http://localhost:8080/api/v1/sync/executions?syncType=AGENTS&status=FAILED&page=0&size=20"
+```
+
+Buscar a última execução registrada de cada tipo:
+
+```bash
+curl "http://localhost:8080/api/v1/sync/executions/latest"
+```
+
+Consultar o status operacional consolidado:
+
+```bash
+curl "http://localhost:8080/api/v1/sync/status"
+```
+
+Regras aplicadas:
+- `overallStatus=HEALTHY` quando não há falhas ou sucessos parciais nas últimas execuções.
+- `overallStatus=WARNING` quando alguma última execução está como `PARTIAL_SUCCESS`.
+- `overallStatus=DEGRADED` quando alguma última execução está como `FAILED`.
+- `FAILED` tem prioridade sobre `PARTIAL_SUCCESS`.
+- A resposta inclui `fixedDelayMs` e `initialDelayMs` lidos de `SchedulerProperties`.
+- `errorMessage` é resumido e não expõe stacktrace.
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -428,6 +464,7 @@ teams-tracking-system/
 | Cálculo de distância (Haversine) | Implementado |
 | Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso, sync de check-ins, CRUD de agentes, check-in manual e rota do dia |
 | Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
+| Monitoramento operacional da sincronização | Implementado |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
 ## 🔐 Segurança

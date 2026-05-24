@@ -461,3 +461,39 @@ Implementar `GET /api/v1/agents/{id}/route?date=YYYY-MM-DD` construindo a rota e
 - A regra de distância fica testável e isolada do controller.
 - Não há dependência de PostGIS, biblioteca geoespacial ou nova tabela neste passo.
 - Um filtro por `source` pode ser adicionado futuramente sem mudar a fonte principal da rota.
+
+---
+
+## Decisão 013 — Monitoramento operacional das sincronizações
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+O sistema já persistia `SyncExecution` para auditar cada sincronização manual ou automática. Para o frontend e para a avaliação técnica, porém, não basta gravar esse histórico: é necessário expor uma leitura operacional clara sobre execuções, falhas, últimas rodadas e configuração dos schedulers.
+
+### Decisão
+
+Implementar endpoints de monitoramento em `GET /api/v1/sync/executions`, `GET /api/v1/sync/executions/latest` e `GET /api/v1/sync/status`, usando DTOs e um `SyncMonitoringService` dedicado.
+
+### Justificativa
+
+- `GET /api/v1/sync/executions` lista o histórico de `SyncExecution` com filtros por `syncType`, `status` e paginação.
+- `GET /api/v1/sync/executions/latest` retorna no máximo uma última execução por tipo, em ordem lógica: agentes, localizações, check-ins, geofences e full sync.
+- `GET /api/v1/sync/status` consolida o estado operacional das sincronizações.
+- `overallStatus` usa `HEALTHY`, `WARNING` e `DEGRADED`.
+- Uma última execução `FAILED` torna o status `DEGRADED`.
+- Uma última execução `PARTIAL_SUCCESS`, sem falhas, torna o status `WARNING`.
+- Na ausência de falhas conhecidas, o status permanece `HEALTHY`.
+- Dados dos schedulers são expostos a partir de `SchedulerProperties`, sem tentar detectar execução em andamento neste passo.
+- `errorMessage` é resumido para evitar exposição de stacktrace.
+- Entidades JPA não são retornadas diretamente nos endpoints de monitoramento.
+
+### Consequências
+
+- O frontend ganha base para construir um painel de monitoramento.
+- O avaliador consegue verificar rapidamente quando as sincronizações rodaram e se falharam.
+- A regra de cálculo de status fica isolada e testável.
+- Nenhuma regra de sincronização ou scheduler precisou ser alterada.
