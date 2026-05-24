@@ -338,7 +338,23 @@ curl -X POST http://localhost:8080/api/v1/check-ins \
   }'
 ```
 
-Check-ins manuais recebem `id` no formato `local_ci_<uuid>`, `source=MANUAL` e `externalEventId=null`. Quando há coordenadas e a acurácia é aceitável, o backend também cria um ponto em `LocationHistory` com `source=MANUAL_CHECKIN`. O cálculo Haversine ainda não foi implementado.
+Check-ins manuais recebem `id` no formato `local_ci_<uuid>`, `source=MANUAL` e `externalEventId=null`. Quando há coordenadas e a acurácia é aceitável, o backend também cria um ponto em `LocationHistory` com `source=MANUAL_CHECKIN`.
+
+#### Rota do dia
+
+```bash
+curl "http://localhost:8080/api/v1/agents/seed_agent_001/route?date=2026-05-22"
+```
+
+Regras aplicadas:
+- `date` é interpretado no timezone `America/Sao_Paulo`.
+- A rota usa apenas `LocationHistory`, fonte consolidada dos pontos geográficos.
+- Pontos com `accuracy > 50` são ignorados defensivamente.
+- Pontos com `accuracy = null` são aceitos.
+- `GPS_SYNC`, `MANUAL_CHECKIN` e `EVENT_SYNC` entram na rota.
+- `totalDistanceMeters` e `distanceFromPreviousMeters` são calculados com Haversine.
+- Se o agente existir sem pontos no dia, a resposta é `200 OK` com `points=[]` e `totalDistanceMeters=0.00`.
+- `404` é retornado apenas quando o agente não existe.
 
 #### Geofences
 
@@ -408,7 +424,9 @@ teams-tracking-system/
 | Utilizar WebClient | Implementado |
 | Implementar os 4 schedulers obrigatórios | Implementado |
 | Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações, check-ins e geofences |
-| Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso, sync de check-ins, CRUD de agentes e check-in manual |
+| Histórico completo de rota do dia | Implementado |
+| Cálculo de distância (Haversine) | Implementado |
+| Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso, sync de check-ins, CRUD de agentes, check-in manual e rota do dia |
 | Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 

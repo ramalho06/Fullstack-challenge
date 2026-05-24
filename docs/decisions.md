@@ -424,3 +424,40 @@ Padronizar respostas de erro com `ApiErrorResponse`, sempre no formato:
 - O frontend pode tratar erros por `error.code`, sem depender de texto livre.
 - Novos conflitos de domínio podem usar `ConflictException` sem alterar o contrato HTTP.
 - A API pública fica mais estável antes da implementação da rota do dia e do cálculo Haversine.
+
+---
+
+## Decisão 012 — Histórico de rota do dia com Haversine
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+O desafio exige histórico completo de rota do dia e cálculo de distância. O sistema já consolida pontos geográficos em `LocationHistory`, alimentado por sincronização de localizações e por check-ins com coordenadas válidas.
+
+### Decisão
+
+Implementar `GET /api/v1/agents/{id}/route?date=YYYY-MM-DD` construindo a rota exclusivamente a partir de `LocationHistory`. A distância entre pontos consecutivos válidos será calculada com a fórmula de Haversine.
+
+### Justificativa
+
+- `LocationHistory` é a fonte consolidada de pontos geográficos do sistema.
+- `CheckIn` não será consultado diretamente para evitar duplicidade, pois check-ins com coordenadas válidas já podem gerar `LocationHistory`.
+- `date` será interpretado em `America/Sao_Paulo`, porque representa uma data operacional local.
+- Timestamps continuam persistidos como `Instant`, e o intervalo local é convertido para `Instant` antes da consulta.
+- A consulta usa início inclusivo e fim exclusivo: `recordedAt >= start` e `recordedAt < end`.
+- Pontos com `accuracy > 50` são filtrados defensivamente na resposta, sem alterar o banco.
+- Pontos com `accuracy = null` são aceitos, seguindo a regra já adotada nas sincronizações.
+- Todos os `LocationSource` entram na rota: `GPS_SYNC`, `MANUAL_CHECKIN` e `EVENT_SYNC`.
+- A distância total é a soma das distâncias entre pontos consecutivos válidos.
+- Se o agente existir sem pontos no dia, a resposta é `200 OK` com lista vazia e distância total `0.00`.
+- `GeoDistanceCalculator` fica em `common/geo` para poder ser reutilizado por check-ins, geofencing ou relatórios futuros.
+
+### Consequências
+
+- O frontend passa a ter um endpoint direto para exibir o percurso diário.
+- A regra de distância fica testável e isolada do controller.
+- Não há dependência de PostGIS, biblioteca geoespacial ou nova tabela neste passo.
+- Um filtro por `source` pode ser adicionado futuramente sem mudar a fonte principal da rota.
