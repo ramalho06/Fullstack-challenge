@@ -47,3 +47,18 @@ external:
   api:
     base-url: ${EXTERNAL_API_BASE_URL}
     key: ${EXTERNAL_API_KEY}
+
+# ---------- Schedulers de Sincronização ----------
+# Os schedulers são gatilhos automáticos para os mesmos services usados
+# pelos endpoints manuais em /api/v1/sync/*.
+app:
+  schedulers:
+    enabled: true
+    agents-fixed-delay-ms: 600000
+    agents-initial-delay-ms: 30000
+    locations-fixed-delay-ms: 60000
+    locations-initial-delay-ms: 45000
+    check-ins-fixed-delay-ms: 120000
+    check-ins-initial-delay-ms: 60000
+    geofences-fixed-delay-ms: 1800000
+    geofences-initial-delay-ms: 90000
