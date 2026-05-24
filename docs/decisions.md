@@ -532,3 +532,37 @@ Adicionar documentação OpenAPI com `springdoc-openapi-starter-webmvc-ui`, mant
 - O frontend passa a ter uma referência clara de requests, responses e erros.
 - A documentação segue o contrato público de DTOs, sem expor entidades JPA como modelo da API.
 - Uma futura autenticação poderá adicionar `securityScheme` de forma explícita quando existir implementação real.
+
+---
+
+## Decisão 015 — Dockerização do backend com MySQL
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+O avaliador precisa conseguir subir o backend completo com baixo atrito. Até aqui, o `docker-compose.yml` subia apenas o MySQL, exigindo que o backend fosse executado localmente com Java e variáveis de ambiente configuradas no terminal ou na IDE.
+
+### Decisão
+
+Adicionar um `Dockerfile` multi-stage para o backend e ajustar o `docker-compose.yml` para subir `mysql` e `backend` com `docker compose up --build`.
+
+### Justificativa
+
+- O backend usa build multi-stage: uma etapa com JDK 17 e Maven Wrapper para gerar o JAR, e uma etapa runtime com Java 17 para executar a aplicação.
+- O frontend ainda não foi incluído no Docker porque ainda não começou; criar um serviço vazio aumentaria complexidade sem benefício.
+- O backend continua configurado por variáveis de ambiente, sem criar profile Spring específico para Docker.
+- O MySQL possui `healthcheck` para indicar quando está realmente pronto para conexões.
+- O backend usa `depends_on` com `condition: service_healthy`, evitando que ele tente conectar antes do MySQL estar saudável.
+- Flyway roda automaticamente ao subir o backend, aplicando migrations antes da aplicação ficar pronta.
+- Segredos ficam fora do repositório e devem ser definidos no `.env`.
+- Dentro do Docker, o backend acessa o banco pelo hostname `mysql`, não por `localhost`, porque cada serviço roda em seu próprio container.
+
+### Consequências
+
+- O avaliador consegue subir banco e backend com um único comando.
+- O ambiente Docker fica mais próximo de uma implantação real simples.
+- A execução local fora do Docker continua possível usando as mesmas variáveis de ambiente.
+- Um serviço de frontend poderá ser adicionado ao compose depois, quando a aplicação Next.js existir.

@@ -80,10 +80,45 @@ Edite o arquivo `.env` e configure:
 
 > ⚠️ **IMPORTANTE:** A API Key real **nunca** deve ser commitada no repositório. O arquivo `.env` está no `.gitignore`.
 
-### 3. Subir o MySQL com Docker
+### 3. Executar backend + MySQL com Docker
+
+Com o `.env` configurado, suba a aplicação completa:
 
 ```bash
-docker compose up -d
+docker compose up --build
+```
+
+Esse comando sobe:
+- `mysql`
+- `backend`
+
+URLs principais:
+- Backend: http://localhost:8080
+- Health check: http://localhost:8080/api/health
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+- MySQL: `localhost:3306`
+
+O Flyway roda automaticamente quando o backend sobe. Dentro do Docker, o backend acessa o banco pelo hostname `mysql`, não por `localhost`.
+
+Para parar os containers:
+
+```bash
+docker compose down
+```
+
+Para parar e remover o volume do banco, resetando os dados:
+
+```bash
+docker compose down -v
+```
+
+> O frontend ainda não está no Docker porque será implementado em um passo futuro.
+
+### 4. Alternativa: subir apenas o MySQL com Docker e rodar o backend localmente
+
+```bash
+docker compose up -d mysql
 ```
 
 Verifique se o MySQL está saudável:
@@ -92,7 +127,7 @@ Verifique se o MySQL está saudável:
 docker compose ps
 ```
 
-### 4. Rodar o Backend
+### 5. Rodar o Backend localmente
 
 ```bash
 cd backend
@@ -106,7 +141,7 @@ export $(cat ../.env | grep -v '^#' | xargs)
 
 **Alternativa (IntelliJ IDEA):** Configure as variáveis de ambiente na Run Configuration do IntelliJ.
 
-### 5. Verificar se está funcionando
+### 6. Verificar se está funcionando
 
 ```bash
 curl http://localhost:8080/api/health
@@ -121,7 +156,7 @@ Resposta esperada:
 }
 ```
 
-### 6. Sincronizar agentes manualmente
+### 7. Sincronizar agentes manualmente
 
 Com o backend rodando e as variáveis `EXTERNAL_API_BASE_URL` e `EXTERNAL_API_KEY` configuradas no `.env`, execute:
 
@@ -507,7 +542,7 @@ O Swagger documenta DTOs públicos, exemplos dos principais endpoints e o contra
 |---|---|
 | Testes automatizados | Implementado |
 | Swagger/OpenAPI | Implementado |
-| Dockerização do MySQL | Implementado |
+| Dockerização do backend + MySQL | Implementado |
 | Circuit Breaker com Resilience4j | Não iniciado |
 | WebSocket/SSE | Não iniciado |
 | Mapa interativo com Leaflet | Não iniciado |

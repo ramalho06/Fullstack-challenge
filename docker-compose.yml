@@ -1,12 +1,11 @@
 # ===========================================
 # Docker Compose - Teams Tracking System
 # ===========================================
-# Sobe o banco de dados MySQL para desenvolvimento local.
-# Uso: docker compose up -d
+# Sobe MySQL e backend para desenvolvimento local.
+# Uso: docker compose up --build
 # ===========================================
 
 services:
-
   mysql:
     image: mysql:8.0
     container_name: tracking-mysql
@@ -23,12 +22,29 @@ services:
       # Sem isso, os dados seriam perdidos ao parar o container.
       - mysql_data:/var/lib/mysql
     healthcheck:
-      # Verifica se o MySQL está aceitando conexões
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tracking-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-challenge}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-trackinguser}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-trackingpass}
+      EXTERNAL_API_BASE_URL: ${EXTERNAL_API_BASE_URL:-https://desafio-media.onrender.com}
+      EXTERNAL_API_KEY: ${EXTERNAL_API_KEY}
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql_data:
