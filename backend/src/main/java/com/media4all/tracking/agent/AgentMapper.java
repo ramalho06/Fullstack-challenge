@@ -1,6 +1,7 @@
 package com.media4all.tracking.agent;
 
 import com.media4all.tracking.external.agent.ExternalAgentDto;
+import com.media4all.tracking.agent.dto.AgentResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -26,5 +27,29 @@ public class AgentMapper {
         agent.setLastSeen(dto.lastSeen());
         agent.setExternalCreatedAt(dto.createdAt());
         agent.setExternalUpdatedAt(dto.updatedAt());
+    }
+
+    public AgentResponse toResponse(Agent agent) {
+        return new AgentResponse(
+                agent.getId(),
+                agent.getExternalId(),
+                agent.getName(),
+                agent.getRole(),
+                agent.getTeam(),
+                agent.getPhone(),
+                agent.getEmail(),
+                agent.getActive(),
+                agent.getStatus(),
+                agent.getBattery(),
+                agent.getLastSeen(),
+                agent.getCurrentLatitude(),
+                agent.getCurrentLongitude(),
+                agent.getCurrentAddress(),
+                agent.getCurrentAccuracy(),
+                agent.getCurrentSpeed(),
+                agent.getCurrentLocationUpdatedAt(),
+                agent.getCreatedAt(),
+                agent.getUpdatedAt()
+        );
     }
 }

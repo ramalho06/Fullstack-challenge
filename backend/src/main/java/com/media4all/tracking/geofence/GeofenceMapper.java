@@ -1,6 +1,7 @@
 package com.media4all.tracking.geofence;
 
 import com.media4all.tracking.external.geofence.ExternalGeofenceDto;
+import com.media4all.tracking.geofence.dto.GeofenceResponse;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,5 +23,21 @@ public class GeofenceMapper {
         geofence.setAlertOnExit(dto.alertOnExit());
         geofence.setAssignedTeams(dto.assignedTeams());
         geofence.setSyncedAt(dto.syncedAt());
+    }
+
+    public GeofenceResponse toResponse(Geofence geofence) {
+        return new GeofenceResponse(
+                geofence.getId(),
+                geofence.getExternalId(),
+                geofence.getName(),
+                geofence.getType(),
+                geofence.getCoordinatesJson(),
+                geofence.getAlertOnEnter(),
+                geofence.getAlertOnExit(),
+                geofence.getAssignedTeams(),
+                geofence.getSyncedAt(),
+                geofence.getCreatedAt(),
+                geofence.getUpdatedAt()
+        );
     }
 }

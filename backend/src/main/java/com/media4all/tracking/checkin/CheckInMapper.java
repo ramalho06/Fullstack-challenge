@@ -1,6 +1,7 @@
 package com.media4all.tracking.checkin;
 
 import com.media4all.tracking.agent.Agent;
+import com.media4all.tracking.checkin.dto.CheckInResponse;
 import com.media4all.tracking.external.checkin.ExternalCheckInDto;
 import com.media4all.tracking.location.LocationHistory;
 import com.media4all.tracking.location.LocationSource;
@@ -53,5 +54,24 @@ public class CheckInMapper {
             case GPS_SYNC -> LocationSource.GPS_SYNC;
             case EVENT_SYNC -> LocationSource.EVENT_SYNC;
         };
+    }
+
+    public CheckInResponse toResponse(CheckIn checkIn) {
+        return new CheckInResponse(
+                checkIn.getId(),
+                checkIn.getAgent().getId(),
+                checkIn.getType(),
+                checkIn.getSource(),
+                checkIn.getLatitude(),
+                checkIn.getLongitude(),
+                checkIn.getAddress(),
+                checkIn.getAccuracy(),
+                checkIn.getSpeed(),
+                checkIn.getNotes(),
+                checkIn.getDistanceFromPrevious(),
+                checkIn.getExternalEventId(),
+                checkIn.getOccurredAt(),
+                checkIn.getSyncedAt()
+        );
     }
 }

@@ -99,6 +99,26 @@ public class Agent extends BaseEntity {
         return name;
     }
 
+    public AgentRole getRole() {
+        return role;
+    }
+
+    public String getTeam() {
+        return team;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
     public BigDecimal getBattery() {
         return battery;
     }

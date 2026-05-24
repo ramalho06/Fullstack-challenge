@@ -343,3 +343,42 @@ Os intervalos e delays iniciais são configuráveis por `application.yml`, sob o
 - A aplicação passa a sincronizar automaticamente dados externos.
 - Endpoints manuais continuam disponíveis para testes e reprocessamento controlado.
 - Em ambiente com múltiplas instâncias, ShedLock ou outro lock distribuído seria a evolução natural para evitar execução duplicada entre nós diferentes.
+
+---
+
+## Decisão 010 — Endpoints de consulta e CRUD expõem o domínio via DTOs
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+Depois das sincronizações manuais e automáticas, o frontend precisa consumir dados estáveis do backend. Expor entidades JPA diretamente nos controllers criaria acoplamento com o modelo de persistência, risco de vazamento de campos internos e maior chance de problemas com relacionamentos lazy.
+
+### Decisão
+
+Implementar endpoints de consulta e gestão usando DTOs de request e response. O CRUD completo será limitado a `Agent`, enquanto localizações, check-ins e geofences terão endpoints de consulta. O registro manual de check-in será permitido por `POST /api/v1/check-ins`.
+
+### Justificativa
+
+- `Agent` é o único recurso com CRUD completo neste passo, porque o desafio pede gestão completa de agentes.
+- Localizações e geofences são inicialmente alimentadas pela sincronização externa e expostas como consulta para o frontend.
+- Check-ins possuem consulta e criação manual, porque registro manual de check-in é requisito funcional do desafio.
+- Agentes criados localmente recebem `id` no formato `local_agent_<uuid>` e `externalId` no formato `local-ext-agent_<uuid>`.
+- O `externalId` local é gerado pelo backend para manter a constraint `NOT NULL UNIQUE` sem obrigar o frontend a conhecer detalhes técnicos de sincronização.
+- `DELETE /api/v1/agents/{id}` faz soft delete, definindo `active=false` e `status=OFFLINE`, para preservar histórico e relacionamentos.
+- `PUT /api/v1/agents/{id}` altera apenas campos cadastrais e operacionais editáveis manualmente: nome, função, equipe, telefone, e-mail, ativo e status.
+- Campos controlados por sincronização, como localização atual, bateria, `lastSeen`, `externalId` e timestamps externos, não são editáveis via CRUD.
+- Controllers permanecem finos: validam entrada, delegam para services e retornam DTOs.
+- Endpoints paginados usam um DTO próprio (`PageResponse`) para evitar expor a serialização interna de `PageImpl` do Spring e entregar um contrato JSON mais estável ao frontend.
+- O tratamento global de erros padroniza respostas de 404, validação, argumentos inválidos e falhas inesperadas.
+- Rota do dia e cálculo Haversine ficam para o próximo passo, porque exigem regras próprias sobre histórico, ordenação e distância entre pontos.
+
+### Consequências
+
+- O frontend pode começar a consumir endpoints reais sem depender de entidades JPA.
+- A API fica mais estável para evolução futura, mesmo que o modelo interno mude.
+- Agentes locais podem ser criados sem conflitar com IDs canônicos da API externa.
+- O histórico de check-ins e localizações permanece preservado mesmo após soft delete de agente.
+- Ainda será necessário implementar a rota do dia e o cálculo de distância em uma etapa específica.

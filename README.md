@@ -128,7 +128,7 @@ Resposta esperada:
 }
 ```
 
-> Os schedulers ainda não foram implementados. Por enquanto, a sincronização é manual para validar o caso de uso antes da automação.
+> Os schedulers automáticos também chamam o mesmo service. O endpoint manual permanece útil para testes e reprocessamentos controlados.
 
 ### 7. Sincronizar localizações manualmente
 
@@ -246,6 +246,105 @@ app:
 
 `app.schedulers.enabled=false` desabilita os gatilhos automáticos. Cada rotina usa um `AtomicBoolean` próprio para impedir sobreposição local da mesma sincronização.
 
+### 11. Endpoints de consulta e gestão
+
+O backend expõe DTOs para o frontend e não retorna entidades JPA diretamente. Endpoints paginados usam um DTO próprio com `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last` e `empty`.
+
+#### Agentes
+
+```bash
+curl "http://localhost:8080/api/v1/agents?page=0&size=20"
+curl "http://localhost:8080/api/v1/agents?active=true&status=ONLINE&page=0&size=20"
+curl http://localhost:8080/api/v1/agents/seed_agent_001
+```
+
+Criar agente local:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/agents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Agente Local",
+    "role": "TECHNICIAN",
+    "team": "Alpha",
+    "phone": "+55 11 99999-0000",
+    "email": "agente.local@example.com",
+    "active": true,
+    "status": "OFFLINE"
+  }'
+```
+
+Agentes criados localmente recebem `id` no formato `local_agent_<uuid>` e `externalId` no formato `local-ext-agent_<uuid>`. O frontend não precisa enviar esses campos técnicos.
+
+Atualizar dados cadastrais:
+
+```bash
+curl -X PUT http://localhost:8080/api/v1/agents/<agent-id> \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Agente Local Atualizado",
+    "role": "MAINTENANCE",
+    "team": "Beta",
+    "phone": "+55 11 98888-0000",
+    "email": "agente.atualizado@example.com",
+    "active": true,
+    "status": "PAUSED"
+  }'
+```
+
+Remover agente:
+
+```bash
+curl -X DELETE http://localhost:8080/api/v1/agents/<agent-id>
+```
+
+O delete é lógico: o registro permanece no banco, com `active=false` e `status=OFFLINE`. Isso preserva histórico e evita quebrar relacionamentos.
+
+#### Localizações
+
+```bash
+curl "http://localhost:8080/api/v1/locations?active=true"
+curl "http://localhost:8080/api/v1/locations?onlineOnly=true"
+curl http://localhost:8080/api/v1/agents/seed_agent_001/location
+```
+
+`GET /api/v1/agents/{id}/location` retorna o agente mesmo quando ainda não há coordenadas conhecidas; nesse caso, os campos de localização vêm como `null`.
+
+#### Check-ins
+
+```bash
+curl "http://localhost:8080/api/v1/check-ins?page=0&size=20"
+curl "http://localhost:8080/api/v1/check-ins?agentId=seed_agent_001&type=CHECKIN&page=0&size=20"
+```
+
+Registrar check-in manual:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/check-ins \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agentId": "seed_agent_001",
+    "type": "CHECKIN",
+    "latitude": -23.5505200,
+    "longitude": -46.6333080,
+    "address": "Praça da Sé - São Paulo, SP",
+    "accuracy": 12.5,
+    "speed": 0,
+    "notes": "Check-in manual"
+  }'
+```
+
+Check-ins manuais recebem `id` no formato `local_ci_<uuid>`, `source=MANUAL` e `externalEventId=null`. Quando há coordenadas e a acurácia é aceitável, o backend também cria um ponto em `LocationHistory` com `source=MANUAL_CHECKIN`. O cálculo Haversine ainda não foi implementado.
+
+#### Geofences
+
+```bash
+curl "http://localhost:8080/api/v1/geofences?page=0&size=20"
+curl "http://localhost:8080/api/v1/geofences?type=CIRCLE&page=0&size=20"
+```
+
+Geofences têm consulta paginada, mas CRUD fica fora deste passo. O `coordinatesJson` continua sendo entregue como texto bruto para o frontend interpretar futuramente no mapa.
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -303,7 +402,7 @@ teams-tracking-system/
 | Utilizar WebClient | Implementado |
 | Implementar os 4 schedulers obrigatórios | Implementado |
 | Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações, check-ins e geofences |
-| Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso e sync de check-ins |
+| Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso, sync de check-ins, CRUD de agentes e check-in manual |
 | Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
