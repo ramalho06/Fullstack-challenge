@@ -7,6 +7,7 @@ import com.media4all.tracking.external.location.ExternalLocationDto;
 import com.media4all.tracking.external.location.ExternalLocationGateway;
 import com.media4all.tracking.sync.SyncExecution;
 import com.media4all.tracking.sync.SyncExecutionRepository;
+import com.media4all.tracking.sync.SyncFailureMessage;
 import com.media4all.tracking.sync.SyncStatus;
 import com.media4all.tracking.sync.SyncType;
 import com.media4all.tracking.sync.dto.SyncResultResponse;
@@ -138,7 +139,7 @@ public class LocationSyncService {
 
             execution.setStatus(SyncStatus.FAILED);
             execution.setFinishedAt(Instant.now());
-            execution.setErrorMessage(exception.getMessage());
+            execution.setErrorMessage(SyncFailureMessage.resolve(exception, SyncType.LOCATIONS));
 
             if (exception instanceof ExternalApiException externalApiException) {
                 execution.setHttpStatus(externalApiException.getHttpStatus());

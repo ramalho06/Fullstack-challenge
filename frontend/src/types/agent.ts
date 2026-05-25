@@ -34,3 +34,13 @@ export type AgentFilters = {
   size?: number;
   sort?: string;
 };
+
+export type AgentWritePayload = {
+  name: string;
+  role?: AgentRole | null;
+  team?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  active?: boolean;
+  status: AgentStatus;
+};

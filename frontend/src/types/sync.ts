@@ -43,3 +43,11 @@ export type SyncStatusResponse = {
   totalFailures: number;
   syncs: SyncTypeStatus[];
 };
+
+export type SyncExecutionFilters = {
+  syncType?: SyncType;
+  status?: SyncStatus;
+  page?: number;
+  size?: number;
+  sort?: string;
+};

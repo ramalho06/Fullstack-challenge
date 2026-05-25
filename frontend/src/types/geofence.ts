@@ -13,3 +13,10 @@ export type Geofence = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type GeofenceFilters = {
+  type?: GeofenceType;
+  page?: number;
+  size?: number;
+  sort?: string;
+};

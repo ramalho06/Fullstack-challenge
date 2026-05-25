@@ -663,3 +663,41 @@ Implementar o dashboard operacional mínimo na rota `/`, consumindo endpoints re
 - O avaliador consegue ver métricas e dados operacionais sem depender do Swagger ou de `curl`.
 - A arquitetura de services e hooks fica preparada para as próximas telas.
 - O dashboard ainda não executa ações, não exibe mapa e não implementa formulários.
+
+---
+
+## Decisão 019 — Telas essenciais com formulários validados
+
+**Data:** 2026-05-25
+
+**Status:** Aceita
+
+### Contexto
+
+Depois do dashboard, o frontend precisava deixar de ser apenas observabilidade inicial e passar a cobrir os fluxos principais do usuário: gestão de agentes, registro manual de check-ins, consulta de geofences e monitoramento operacional de sincronização.
+
+### Decisão
+
+Implementar as telas `/agents`, `/check-ins`, `/geofences` e `/sync` consumindo APIs reais do backend, usando TanStack Query para queries/mutations e React Hook Form + Zod nos formulários.
+
+### Justificativa
+
+- `/agents` concentra a gestão visual de agentes, incluindo criação, edição e desativação.
+- Criação e edição de agentes usam Dialog para reduzir complexidade de rotas e manter o fluxo rápido.
+- Formulários usam React Hook Form + Zod para validação local previsível.
+- Mutations usam TanStack Query e invalidam caches relacionados após sucesso.
+- Sonner é usado para feedback de sucesso e erro nas ações do usuário.
+- DELETE de agente é apresentado como “Desativar”, porque o backend usa soft delete.
+- `/check-ins` permite consulta e registro manual de check-ins com seleção de agente via Select.
+- `/geofences` é apenas consulta, preservando geometrias como JSON bruto.
+- `/sync` é leitura/monitoramento, sem comandos manuais neste passo.
+- Paginação simples com “Anterior” e “Próxima” foi escolhida por prazo e clareza.
+- Rotas de detalhe foram adiadas para evitar expansão de escopo.
+- Leaflet, mapa e geofencing visual ficam para etapa posterior.
+
+### Consequências
+
+- O frontend cobre os principais fluxos funcionais do desafio sem depender do Swagger.
+- Os contratos públicos do backend foram reaproveitados sem alteração.
+- A experiência já possui estados de loading, erro e vazio nas telas principais.
+- A navegação continua simples, sem rotas de detalhe ou ações operacionais de sync manual.

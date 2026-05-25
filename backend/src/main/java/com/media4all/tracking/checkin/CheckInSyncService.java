@@ -9,6 +9,7 @@ import com.media4all.tracking.location.LocationHistoryRepository;
 import com.media4all.tracking.location.LocationSource;
 import com.media4all.tracking.sync.SyncExecution;
 import com.media4all.tracking.sync.SyncExecutionRepository;
+import com.media4all.tracking.sync.SyncFailureMessage;
 import com.media4all.tracking.sync.SyncState;
 import com.media4all.tracking.sync.SyncStateRepository;
 import com.media4all.tracking.sync.SyncStatus;
@@ -221,7 +222,7 @@ public class CheckInSyncService {
 
             execution.setStatus(SyncStatus.FAILED);
             execution.setFinishedAt(Instant.now());
-            execution.setErrorMessage(exception.getMessage());
+            execution.setErrorMessage(SyncFailureMessage.resolve(exception, SyncType.CHECK_INS));
 
             if (exception instanceof ExternalApiException externalApiException) {
                 execution.setHttpStatus(externalApiException.getHttpStatus());

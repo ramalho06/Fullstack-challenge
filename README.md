@@ -186,7 +186,7 @@ O backend libera CORS para `http://localhost:3000` por padrão. Para alterar as 
 APP_CORS_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-O frontend já possui layout base, navegação, providers, shadcn/ui, TanStack Query e dashboard inicial na rota `/`. O dashboard consome dados reais do backend para métricas operacionais, últimas sincronizações e localizações atuais.
+O frontend já possui layout base, navegação, providers, shadcn/ui, TanStack Query, dashboard inicial na rota `/` e telas essenciais para agentes, check-ins, geofences e sincronização. As telas consomem APIs reais do backend.
 
 ### 8. Sincronizar agentes manualmente
 
@@ -579,7 +579,16 @@ O dashboard mostra:
 - tabela de últimas sincronizações;
 - tabela de localizações atuais.
 
-Os dados são atualizados periodicamente via `refetchInterval`. Nesta etapa não há mapa, gráficos, botões de sync manual, CRUD visual ou formulários reais.
+Os dados são atualizados periodicamente via `refetchInterval`. O dashboard é somente leitura: não possui mapa, gráficos ou botões de sync manual.
+
+As telas essenciais também já estão disponíveis:
+
+- `/agents`: lista agentes, aplica filtros básicos, cria agente, edita agente e desativa agente via soft delete.
+- `/check-ins`: lista check-ins, aplica filtros básicos e registra check-in manual selecionando agente real do backend.
+- `/geofences`: lista geofences, filtra por tipo e exibe `coordinatesJson` completo em dialog.
+- `/sync`: exibe status operacional, últimas execuções e histórico paginado de sincronizações.
+
+Formulários usam React Hook Form + Zod, mutations usam TanStack Query e ações exibem feedback com Sonner. Ainda não há mapa, Leaflet, gráficos, botões de sync manual ou rotas de detalhe.
 
 ## 🧪 Fluxo recomendado de validação
 
@@ -622,7 +631,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 
 ## ⚠️ Limitações conhecidas
 
-- O frontend possui dashboard mínimo com consumo real de APIs, mas CRUD visual, formulários e telas detalhadas ainda entram nos próximos passos.
+- O frontend possui dashboard mínimo e telas essenciais com consumo real de APIs, mas rotas de detalhe e telas mais analíticas ainda entram nos próximos passos.
 - `SyncState` prepara a sincronização incremental por `syncToken`, mas a API externa testada não retornou um token funcional para check-ins.
 - Circuit Breaker com Resilience4j não foi implementado; o retry atual é limitado e cobre `429` e `503`.
 - WebSocket/SSE não foi implementado.
@@ -642,6 +651,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
 | Monitoramento operacional da sincronização | Implementado |
 | Dashboard frontend mínimo | Implementado |
+| Telas essenciais do frontend | Implementado |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
 ## 🌟 Diferenciais Implementados
@@ -653,6 +663,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Dockerização do backend + MySQL | Implementado |
 | Setup Next.js/Tailwind/shadcn/TanStack Query | Implementado |
 | Dashboard frontend com dados reais | Implementado |
+| CRUD visual de agentes e check-in manual no frontend | Implementado |
 | Circuit Breaker com Resilience4j | Não iniciado |
 | WebSocket/SSE | Não iniciado |
 | Mapa interativo com Leaflet | Não iniciado |
