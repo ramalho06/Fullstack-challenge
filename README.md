@@ -297,7 +297,7 @@ Regras aplicadas:
 - O upsert é feito por `externalId`, preservando o `id` textual retornado pela API.
 - `coordinatesJson` é salvo bruto como `String`/`TEXT`, sem parse ou normalização geométrica.
 - `assignedTeams` é salvo como `String`, sem tabela de equipes.
-- Geofencing visual e mapa interativo continuam como diferenciais futuros.
+- O backend mantém `coordinatesJson` bruto e o frontend interpreta essas geometrias no mapa.
 
 ### 12. Schedulers automáticos
 
@@ -459,7 +459,7 @@ curl "http://localhost:8080/api/v1/geofences?type=CIRCLE&page=0&size=20"
 
 Filtros suportados: `type`, `page`, `size` e `sort`.
 
-Geofences têm consulta paginada, mas CRUD fica fora deste passo. O `coordinatesJson` continua sendo entregue como texto bruto para o frontend interpretar futuramente no mapa.
+Geofences têm consulta paginada, mas CRUD fica fora deste passo. O `coordinatesJson` continua sendo entregue como texto bruto e é interpretado pelo frontend na camada visual do mapa.
 
 ### 14. Monitoramento operacional das sincronizações
 
@@ -587,8 +587,11 @@ As telas essenciais também já estão disponíveis:
 - `/check-ins`: lista check-ins, aplica filtros básicos e registra check-in manual selecionando agente real do backend.
 - `/geofences`: lista geofences, filtra por tipo e exibe `coordinatesJson` completo em dialog.
 - `/sync`: exibe status operacional, últimas execuções e histórico paginado de sincronizações.
+- `/map`: exibe localizações atuais dos agentes em Leaflet, desenha a rota do dia com Polyline e renderiza geofences sincronizadas.
 
-Formulários usam React Hook Form + Zod, mutations usam TanStack Query e ações exibem feedback com Sonner. Ainda não há mapa, Leaflet, gráficos, botões de sync manual ou rotas de detalhe.
+Formulários usam React Hook Form + Zod, mutations usam TanStack Query e ações exibem feedback com Sonner. O mapa consome `GET /api/v1/locations` com atualização a cada 30 segundos, a rota do dia consome `GET /api/v1/agents/{id}/route?date=YYYY-MM-DD` e a camada de geofences consome `GET /api/v1/geofences?page=0&size=100`.
+
+As geofences são exibidas na rota `/map`: `CIRCLE` é renderizado como `Circle`, `POLYGON` é renderizado como `Polygon`, e o `coordinatesJson` recebido em `[longitude, latitude]` é convertido para o formato esperado pelo Leaflet, `[latitude, longitude]`. Geofences inválidas são ignoradas defensivamente para não quebrar o mapa. Ainda não há gráficos, botões de sync manual, rotas de detalhe, SSE/WebSocket ou alertas reais de entrada/saída em geofences.
 
 ## 🧪 Fluxo recomendado de validação
 
@@ -631,11 +634,11 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 
 ## ⚠️ Limitações conhecidas
 
-- O frontend possui dashboard mínimo e telas essenciais com consumo real de APIs, mas rotas de detalhe e telas mais analíticas ainda entram nos próximos passos.
+- O frontend possui dashboard mínimo, telas essenciais e mapa com consumo real de APIs, mas rotas de detalhe e telas mais analíticas ainda entram nos próximos passos.
 - `SyncState` prepara a sincronização incremental por `syncToken`, mas a API externa testada não retornou um token funcional para check-ins.
 - Circuit Breaker com Resilience4j não foi implementado; o retry atual é limitado e cobre `429` e `503`.
 - WebSocket/SSE não foi implementado.
-- Leaflet, mapa interativo e geofencing visual ainda são diferenciais futuros.
+- Geofencing visual é apenas leitura: o mapa desenha áreas sincronizadas, mas não edita geofences nem executa alertas reais de entrada/saída.
 
 ## ✅ Estado dos Requisitos Importantes
 
@@ -652,6 +655,8 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Monitoramento operacional da sincronização | Implementado |
 | Dashboard frontend mínimo | Implementado |
 | Telas essenciais do frontend | Implementado |
+| Mapa com Leaflet | Implementado |
+| Geofencing visual | Implementado |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
 ## 🌟 Diferenciais Implementados
@@ -664,10 +669,10 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Setup Next.js/Tailwind/shadcn/TanStack Query | Implementado |
 | Dashboard frontend com dados reais | Implementado |
 | CRUD visual de agentes e check-in manual no frontend | Implementado |
+| Mapa interativo com Leaflet | Implementado |
+| Geofencing visual | Implementado |
 | Circuit Breaker com Resilience4j | Não iniciado |
 | WebSocket/SSE | Não iniciado |
-| Mapa interativo com Leaflet | Não iniciado |
-| Geofencing visual | Não iniciado |
 
 ## 🔐 Segurança
 

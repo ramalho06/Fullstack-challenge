@@ -4,6 +4,7 @@ import {
   Activity,
   Gauge,
   LandPlot,
+  Map,
   MapPinned,
   RadioTower,
   UsersRound,
@@ -24,6 +25,11 @@ const navigationItems = [
     label: "Agentes",
     href: "/agents",
     icon: UsersRound,
+  },
+  {
+    label: "Mapa",
+    href: "/map",
+    icon: Map,
   },
   {
     label: "Check-ins",

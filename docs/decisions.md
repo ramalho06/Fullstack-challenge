@@ -701,3 +701,67 @@ Implementar as telas `/agents`, `/check-ins`, `/geofences` e `/sync` consumindo 
 - Os contratos públicos do backend foram reaproveitados sem alteração.
 - A experiência já possui estados de loading, erro e vazio nas telas principais.
 - A navegação continua simples, sem rotas de detalhe ou ações operacionais de sync manual.
+
+---
+
+## Decisão 020 — Mapa com Leaflet para rastreamento visual
+
+**Data:** 2026-05-25
+
+**Status:** Aceita
+
+### Contexto
+
+Após dashboard e telas essenciais, o projeto precisava de um diferencial visual para demonstrar rastreamento geográfico. O backend já expunha localizações atuais e rota do dia, então o frontend poderia consumir esses dados sem alterar contratos ou criar lógica GIS avançada.
+
+### Decisão
+
+Implementar a rota `/map` usando Leaflet e react-leaflet para exibir agentes no mapa e desenhar a rota do dia com Polyline.
+
+### Justificativa
+
+- Leaflet foi escolhido por ser uma biblioteca madura e simples para visualização geográfica no frontend.
+- `react-leaflet` foi usado para integração idiomática com React.
+- O mapa fica em `/map`, mantendo o dashboard limpo.
+- `CircleMarker` foi escolhido em vez de `Marker` para evitar problemas de ícones padrão do Leaflet no Next.js e facilitar cor por status.
+- Localizações atuais vêm de `GET /api/v1/locations`.
+- A atualização periódica usa TanStack Query com `refetchInterval` de 30 segundos, sem SSE/WebSocket.
+- A rota do dia usa `GET /api/v1/agents/{id}/route?date=YYYY-MM-DD`.
+- `Polyline` desenha o trajeto retornado pelo backend.
+- Geofences visuais foram deixadas para passo posterior para evitar parse de `coordinatesJson` e lógica espacial adicional.
+
+### Consequências
+
+- O frontend passa a ter uma visualização geográfica real dos agentes.
+- A rota do dia reaproveita o cálculo Haversine já implementado no backend.
+- O mapa continua simples e focado em leitura; clusterização, desenho manual e geofencing visual ficaram fora desta decisão inicial.
+- O uso de Leaflet exige Client Components e carregamento sem SSR para evitar dependência de APIs do browser no servidor.
+
+## Decisão 021 — Geofencing visual no mapa
+
+**Data:** 2026-05-25
+
+**Status:** Aceita
+
+### Contexto
+
+Depois que o mapa passou a exibir agentes e rota do dia, faltava visualizar as áreas operacionais sincronizadas pelo backend. As geofences já estavam persistidas com `coordinatesJson`, mas esse campo é propositalmente bruto para evitar acoplar o backend a uma biblioteca GIS neste desafio.
+
+### Decisão
+
+Renderizar geofences diretamente na rota `/map`, consumindo `GET /api/v1/geofences?page=0&size=100` e interpretando `coordinatesJson` no frontend.
+
+### Justificativa
+
+- A rota `/map` é o lugar natural para visualizar agentes, rotas e áreas operacionais sem criar uma nova página.
+- A API envia coordenadas como `[longitude, latitude]`, enquanto o Leaflet exige `[latitude, longitude]`; por isso a conversão é explícita no frontend.
+- Geofences do tipo `CIRCLE` são renderizadas com `Circle`.
+- Geofences do tipo `POLYGON` são renderizadas com `Polygon`.
+- O parser é defensivo: JSON inválido ou geometria incompleta é ignorado para não quebrar o mapa.
+- Um toggle permite ocultar geofences quando o usuário quiser focar apenas em agentes ou rota do dia.
+
+### Consequências
+
+- O mapa passa a entregar geofencing visual sem alterar backend ou contrato de API.
+- A solução continua focada em visualização, sem alertas reais de entrada/saída.
+- Não foi implementada lógica GIS avançada, edição manual de áreas, clusterização ou cálculo espacial no frontend.

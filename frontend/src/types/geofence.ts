@@ -9,9 +9,9 @@ export type Geofence = {
   alertOnEnter: boolean;
   alertOnExit: boolean;
   assignedTeams: string | null;
-  syncedAt: string;
-  createdAt: string;
-  updatedAt: string;
+  syncedAt: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type GeofenceFilters = {

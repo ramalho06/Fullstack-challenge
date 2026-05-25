@@ -49,6 +49,14 @@ export function formatSpeed(value?: number | null) {
   return `${formatNumber(value)} km/h`;
 }
 
+export function formatMeters(value?: number | null) {
+  if (value === undefined || value === null) {
+    return "—";
+  }
+
+  return `${formatNumber(value)} m`;
+}
+
 export function formatBoolean(value?: boolean | null) {
   if (value === undefined || value === null) {
     return "—";
