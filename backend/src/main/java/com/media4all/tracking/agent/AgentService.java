@@ -132,6 +132,7 @@ public class AgentService {
             return criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("team")), pattern),
                     criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), pattern)
             );
         };
