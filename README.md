@@ -47,6 +47,7 @@ O sistema permite:
 | TanStack Query | Estado servidor |
 | React Hook Form + Zod | Formulários e validação |
 | shadcn/ui | Componentes de UI |
+| Leaflet + react-leaflet | Mapa, rotas e geofencing visual |
 
 ## ⚙️ Pré-requisitos
 
@@ -646,18 +647,24 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 |---|---|
 | Utilizar Next.js 16 com App Router | Implementado |
 | Utilizar WebClient | Implementado |
+| CRUD completo de agentes | Implementado |
+| Atualização automática de posições | Implementado |
+| Check-ins manuais | Implementado |
 | Implementar os 4 schedulers obrigatórios | Implementado |
-| Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações, check-ins e geofences |
+| Persistir histórico de sincronização | Implementado |
 | Histórico completo de rota do dia | Implementado |
 | Cálculo de distância (Haversine) | Implementado |
-| Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso, sync de check-ins, CRUD de agentes, check-in manual e rota do dia |
-| Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
+| Idempotência e conflitos de sincronização | Implementado |
+| Integração externa com WebClient | Implementado |
+| Tratamento de `429` e `503` | Implementado |
+| Aplicar regras de negócio do documento | Implementado |
+| Garantir tratamento adequado de erros e retries | Implementado |
 | Monitoramento operacional da sincronização | Implementado |
 | Dashboard frontend mínimo | Implementado |
 | Telas essenciais do frontend | Implementado |
 | Mapa com Leaflet | Implementado |
 | Geofencing visual | Implementado |
-| Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
+| README e documentação técnica | Implementado |
 
 ## 🌟 Diferenciais Implementados
 

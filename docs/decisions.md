@@ -765,3 +765,31 @@ Renderizar geofences diretamente na rota `/map`, consumindo `GET /api/v1/geofenc
 - O mapa passa a entregar geofencing visual sem alterar backend ou contrato de API.
 - A solução continua focada em visualização, sem alertas reais de entrada/saída.
 - Não foi implementada lógica GIS avançada, edição manual de áreas, clusterização ou cálculo espacial no frontend.
+
+## Decisão 022 — Polimento final e fechamento da entrega
+
+**Data:** 2026-05-25
+
+**Status:** Aceita
+
+### Contexto
+
+Após a implementação do backend, frontend, mapa e geofencing visual, o projeto entrou em fase de fechamento. Nesta etapa, o objetivo deixa de ser criar novas funcionalidades e passa a ser garantir que a entrega esteja clara, executável, documentada e honesta sobre seus limites.
+
+### Decisão
+
+Congelar novas features e focar o polimento final em validação, documentação e pequenos ajustes de consistência.
+
+### Justificativa
+
+- O backend já cobre os requisitos principais: sincronizações manuais, schedulers, CRUD de agentes, check-ins manuais, rota do dia, Haversine, monitoramento, Swagger, Docker e tratamento padronizado de erros.
+- O frontend consome APIs reais para dashboard, agentes, check-ins, geofences, sincronização e mapa.
+- Os diferenciais priorizados foram Docker, testes automatizados, Swagger/OpenAPI, Leaflet e geofencing visual.
+- SSE/WebSocket, Circuit Breaker com Resilience4j, autenticação e alertas reais de geofence ficam como evolução futura.
+- A validação final deve incluir testes do backend, build do frontend, Docker, Swagger, endpoints principais e fluxo visual ponta a ponta.
+
+### Consequências
+
+- O projeto fica estável para avaliação técnica.
+- Mudanças futuras devem ser correções críticas, ajustes de documentação ou melhorias pequenas necessárias para a entrega.
+- Grandes refatorações e novas features ficam fora do escopo final para reduzir risco antes da apresentação.

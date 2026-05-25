@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:tracking_test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+external:
+  api:
+    base-url: http://localhost
+    key: test-api-key
+
+app:
+  schedulers:
+    enabled: false

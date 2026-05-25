@@ -2,14 +2,16 @@ package com.media4all.tracking;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Teste de integração que verifica se o contexto Spring
  * carrega corretamente (todas as beans são resolvidas).
  *
- * Este teste requer que o MySQL esteja acessível.
- * Para rodar sem banco, veja os testes unitários individuais.
+ * Usa o perfil "test" para carregar o contexto sem depender de
+ * variáveis de ambiente locais ou de um MySQL externo.
  */
+@ActiveProfiles("test")
 @SpringBootTest
 class TrackingApplicationTests {
 

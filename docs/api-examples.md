@@ -33,6 +33,14 @@ curl "http://localhost:8080/api/v1/agents?page=0&size=20"
 ```
 
 ```bash
+curl "http://localhost:8080/api/v1/agents?search=Alpha&page=0&size=20"
+```
+
+```bash
+curl "http://localhost:8080/api/v1/agents?active=true&status=ONLINE&page=0&size=20"
+```
+
+```bash
 curl "http://localhost:8080/api/v1/agents/seed_agent_001"
 ```
 
@@ -103,6 +111,10 @@ curl -X POST "http://localhost:8080/api/v1/check-ins" \
 
 ```bash
 curl "http://localhost:8080/api/v1/geofences?page=0&size=20"
+```
+
+```bash
+curl "http://localhost:8080/api/v1/geofences?page=0&size=100"
 ```
 
 ## Rota do dia

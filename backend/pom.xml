@@ -122,6 +122,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- H2 é usado apenas no teste de carregamento do contexto Spring.
+             A aplicação real continua usando MySQL via variáveis de ambiente. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
