@@ -1,7 +1,7 @@
 # ===========================================
 # Docker Compose - Teams Tracking System
 # ===========================================
-# Sobe MySQL e backend para desenvolvimento local.
+# Sobe MySQL, backend e frontend para desenvolvimento/avaliação local.
 # Uso: docker compose up --build
 # ===========================================
 
@@ -47,6 +47,21 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+    container_name: tracking-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+    depends_on:
+      - backend
 
 volumes:
   mysql_data:

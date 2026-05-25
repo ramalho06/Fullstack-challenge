@@ -552,7 +552,7 @@ Adicionar um `Dockerfile` multi-stage para o backend e ajustar o `docker-compose
 ### Justificativa
 
 - O backend usa build multi-stage: uma etapa com JDK 17 e Maven Wrapper para gerar o JAR, e uma etapa runtime com Java 17 para executar a aplicação.
-- O frontend ainda não foi incluído no Docker porque está no setup inicial local; dockerizá-lo antes das telas reais aumentaria complexidade sem benefício imediato.
+- Naquele momento, o frontend ainda não foi incluído no Docker porque estava no setup inicial local; a dockerização completa foi adicionada depois, quando as telas reais ficaram prontas.
 - O backend continua configurado por variáveis de ambiente, sem criar profile Spring específico para Docker.
 - O MySQL possui `healthcheck` para indicar quando está realmente pronto para conexões.
 - O backend usa `depends_on` com `condition: service_healthy`, evitando que ele tente conectar antes do MySQL estar saudável.
@@ -562,10 +562,10 @@ Adicionar um `Dockerfile` multi-stage para o backend e ajustar o `docker-compose
 
 ### Consequências
 
-- O avaliador consegue subir banco e backend com um único comando.
+- O avaliador conseguia subir banco e backend com um único comando nessa etapa.
 - O ambiente Docker fica mais próximo de uma implantação real simples.
 - A execução local fora do Docker continua possível usando as mesmas variáveis de ambiente.
-- Um serviço de frontend poderá ser adicionado ao compose depois, quando as telas reais estiverem implementadas.
+- Um serviço de frontend foi adicionado posteriormente ao compose após a implementação das telas reais.
 
 ---
 
@@ -629,7 +629,7 @@ Criar o frontend do zero em `frontend/` usando Next.js 16, TypeScript, App Route
 - O frontend já possui layout base, navegação e páginas placeholder.
 - As próximas etapas podem focar telas reais em vez de infraestrutura.
 - O backend continua congelado para novas features; o CORS é tratado como ajuste necessário de integração.
-- O frontend ainda não foi incluído no Docker, evitando complexidade antes das telas reais.
+- A dockerização do frontend foi adiada neste momento para evitar complexidade antes das telas reais; ela foi adicionada depois como fechamento da entrega fullstack.
 
 ---
 
@@ -793,3 +793,34 @@ Congelar novas features e focar o polimento final em validação, documentação
 - O projeto fica estável para avaliação técnica.
 - Mudanças futuras devem ser correções críticas, ajustes de documentação ou melhorias pequenas necessárias para a entrega.
 - Grandes refatorações e novas features ficam fora do escopo final para reduzir risco antes da apresentação.
+
+---
+
+## Decisão 023 — Dockerização completa do frontend
+
+**Data:** 2026-05-25
+
+**Status:** Aceita
+
+### Contexto
+
+O diferencial do desafio cita dockerização completa. O projeto já subia MySQL e backend via `docker compose up --build`, mas o frontend ainda precisava ser executado localmente com `npm run dev`. Com as telas reais já implementadas, fazia sentido fechar a entrega com o stack fullstack containerizado.
+
+### Decisão
+
+Adicionar `frontend/Dockerfile`, incluir o serviço `frontend` no `docker-compose.yml` e permitir que `docker compose up --build` suba MySQL, backend e frontend.
+
+### Justificativa
+
+- O frontend usa Dockerfile multi-stage com Node 20: uma etapa instala dependências, outra executa `npm run build` e a etapa final roda `npm run start`.
+- `NEXT_PUBLIC_API_BASE_URL` é definido como build arg e variável de ambiente, com padrão `http://localhost:8080`.
+- A URL pública do backend continua apontando para `localhost:8080`, porque as chamadas do frontend acontecem no navegador do avaliador.
+- O backend já libera CORS para `http://localhost:3000`.
+- O frontend não recebe segredos; apenas variáveis públicas com prefixo `NEXT_PUBLIC_`.
+- A execução local com `npm run dev` continua disponível para desenvolvimento.
+
+### Consequências
+
+- O avaliador consegue subir a aplicação fullstack com um único comando.
+- O README passa a documentar Docker como fluxo principal para MySQL, backend e frontend.
+- A imagem do frontend é simples e prioriza previsibilidade de entrega; otimizações como `output: "standalone"` podem ser avaliadas futuramente, mas não são necessárias para o desafio.

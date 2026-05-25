@@ -103,7 +103,7 @@ Edite o arquivo `.env` e configure:
 
 > ⚠️ **IMPORTANTE:** A API Key real **nunca** deve ser commitada no repositório. O arquivo `.env` está no `.gitignore`.
 
-### 3. Executar backend + MySQL com Docker
+### 3. Executar stack completo com Docker
 
 Com o `.env` configurado, suba a aplicação completa:
 
@@ -114,15 +114,17 @@ docker compose up --build
 Esse comando sobe:
 - `mysql`
 - `backend`
+- `frontend`
 
 URLs principais:
+- Frontend: http://localhost:3000
 - Backend: http://localhost:8080
 - Health check: http://localhost:8080/api/health
 - Swagger UI: http://localhost:8080/swagger-ui/index.html
 - OpenAPI JSON: http://localhost:8080/v3/api-docs
 - MySQL: `localhost:3306`
 
-O Flyway roda automaticamente quando o backend sobe. Dentro do Docker, o backend acessa o banco pelo hostname `mysql`, não por `localhost`.
+O Flyway roda automaticamente quando o backend sobe. Dentro do Docker, o backend acessa o banco pelo hostname `mysql`, não por `localhost`. O frontend usa `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`, porque essa URL é acessada pelo navegador do avaliador.
 
 Para parar os containers:
 
@@ -135,8 +137,6 @@ Para parar e remover o volume do banco, resetando os dados:
 ```bash
 docker compose down -v
 ```
-
-> O frontend ainda não está no Docker. Neste momento ele roda localmente com `npm run dev`.
 
 ### 4. Alternativa: subir apenas o MySQL com Docker e rodar o backend localmente
 
@@ -209,6 +209,18 @@ APP_CORS_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 O frontend já possui layout base, navegação, providers, shadcn/ui, TanStack Query, dashboard inicial na rota `/` e telas essenciais para agentes, check-ins, geofences e sincronização. As telas consomem APIs reais do backend.
+
+Se preferir validar o frontend em modo produção via Docker, use o fluxo principal:
+
+```bash
+docker compose up --build
+```
+
+Depois acesse:
+
+```txt
+http://localhost:3000
+```
 
 ### 8. Sincronizar agentes manualmente
 
@@ -622,7 +634,7 @@ As geofences são exibidas na rota `/map`: `CIRCLE` é renderizado como `Circle`
 <a id="fluxo-recomendado-de-validacao"></a>
 ## 🧪 Fluxo recomendado de validação
 
-Para validar o backend do zero:
+Para validar a aplicação completa do zero:
 
 ```bash
 docker compose down -v
@@ -702,7 +714,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 |---|---|
 | Testes automatizados | Implementado |
 | Swagger/OpenAPI | Implementado |
-| Dockerização do backend + MySQL | Implementado |
+| Dockerização fullstack com MySQL | Implementado |
 | Setup Next.js/Tailwind/shadcn/TanStack Query | Implementado |
 | Dashboard frontend com dados reais | Implementado |
 | CRUD visual de agentes e check-in manual no frontend | Implementado |
