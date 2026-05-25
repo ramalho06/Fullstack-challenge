@@ -39,7 +39,7 @@ O sistema permite:
 | Spring WebFlux | - | WebClient (HTTP reativo) |
 | MySQL | 8.0 | Banco de dados relacional |
 
-### Frontend *(em desenvolvimento)*
+### Frontend *(setup inicial)*
 | Tecnologia | Finalidade |
 |---|---|
 | Next.js 16 | Framework React (App Router) |
@@ -52,6 +52,7 @@ O sistema permite:
 
 - **Java 17+** ([download](https://adoptium.net/))
 - **Maven 3.8+** (ou usar o wrapper `./mvnw` incluído)
+- **Node.js 20+** e **npm** para o frontend
 - **Docker e Docker Compose** ([download](https://www.docker.com/products/docker-desktop/))
 - **Git**
 
@@ -113,7 +114,7 @@ Para parar e remover o volume do banco, resetando os dados:
 docker compose down -v
 ```
 
-> O frontend ainda não está no Docker porque será implementado em um passo futuro.
+> O frontend ainda não está no Docker. Neste momento ele roda localmente com `npm run dev`.
 
 ### 4. Alternativa: subir apenas o MySQL com Docker e rodar o backend localmente
 
@@ -156,7 +157,38 @@ Resposta esperada:
 }
 ```
 
-### 7. Sincronizar agentes manualmente
+### 7. Rodar o frontend localmente
+
+Em outro terminal, com o backend em execução:
+
+```bash
+cd frontend
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+URL do frontend:
+
+```txt
+http://localhost:3000
+```
+
+Variável principal:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
+O backend libera CORS para `http://localhost:3000` por padrão. Para alterar as origens permitidas:
+
+```env
+APP_CORS_ALLOWED_ORIGINS=http://localhost:3000
+```
+
+O frontend está no setup inicial: layout base, navegação, providers, shadcn/ui, TanStack Query e páginas placeholder. As telas reais entram nos próximos passos.
+
+### 8. Sincronizar agentes manualmente
 
 Com o backend rodando e as variáveis `EXTERNAL_API_BASE_URL` e `EXTERNAL_API_KEY` configuradas no `.env`, execute:
 
@@ -180,7 +212,7 @@ Resposta esperada:
 
 > Os schedulers automáticos também chamam o mesmo service. O endpoint manual permanece útil para testes e reprocessamentos controlados.
 
-### 7. Sincronizar localizações manualmente
+### 9. Sincronizar localizações manualmente
 
 Execute primeiro a sincronização de agentes, pois localizações de agentes inexistentes são ignoradas para evitar cadastro parcial:
 
@@ -209,7 +241,7 @@ Regras aplicadas:
 - `latitude`, `longitude`, `lastSeen` ou `agentId` ausentes geram `skipped`.
 - A idempotência do histórico usa `agent_id + recorded_at + source`, evitando duplicação ao rodar o endpoint mais de uma vez.
 
-### 8. Sincronizar check-ins manualmente
+### 10. Sincronizar check-ins manualmente
 
 Execute primeiro a sincronização de agentes, pois check-ins de agentes inexistentes são ignorados:
 
@@ -240,7 +272,7 @@ Regras aplicadas:
 - Check-ins com `accuracy > 50` são salvos, mas não geram `LocationHistory`.
 - Check-ins com coordenadas e `accuracy <= 50` ou `accuracy = null` podem gerar `LocationHistory`.
 
-### 9. Sincronizar geofences manualmente
+### 11. Sincronizar geofences manualmente
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/sync/geofences
@@ -267,7 +299,7 @@ Regras aplicadas:
 - `assignedTeams` é salvo como `String`, sem tabela de equipes.
 - Geofencing visual e mapa interativo continuam como diferenciais futuros.
 
-### 10. Schedulers automáticos
+### 12. Schedulers automáticos
 
 Os quatro schedulers obrigatórios usam os mesmos services dos endpoints manuais:
 
@@ -308,7 +340,7 @@ Ou ao rodar localmente:
 ./mvnw spring-boot:run -Dspring-boot.run.arguments="--app.schedulers.enabled=false"
 ```
 
-### 11. Endpoints de consulta e gestão
+### 13. Endpoints de consulta e gestão
 
 O backend expõe DTOs para o frontend e não retorna entidades JPA diretamente. Endpoints paginados usam um DTO próprio com `content`, `page`, `size`, `totalElements`, `totalPages`, `first`, `last` e `empty`.
 
@@ -429,7 +461,7 @@ Filtros suportados: `type`, `page`, `size` e `sort`.
 
 Geofences têm consulta paginada, mas CRUD fica fora deste passo. O `coordinatesJson` continua sendo entregue como texto bruto para o frontend interpretar futuramente no mapa.
 
-### 12. Monitoramento operacional das sincronizações
+### 14. Monitoramento operacional das sincronizações
 
 O backend expõe endpoints de leitura para acompanhar histórico, últimas execuções e configuração dos schedulers.
 
@@ -487,7 +519,15 @@ teams-tracking-system/
 │   │   │       └── db/migration/
 │   │   └── test/
 │   └── pom.xml
-├── frontend/                   # Next.js (em desenvolvimento)
+├── frontend/                   # Aplicação Next.js
+│   ├── src/
+│   │   ├── app/                # App Router
+│   │   ├── components/         # Layout, providers e shadcn/ui
+│   │   ├── features/           # Módulos de tela futuros
+│   │   ├── services/           # API client e gateways HTTP
+│   │   └── types/              # Tipos compartilhados da API
+│   ├── .env.example
+│   └── package.json
 ├── docs/                       # Documentação e decisões técnicas
 │   ├── api-examples.md
 │   └── decisions.md
@@ -561,7 +601,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 
 ## ⚠️ Limitações conhecidas
 
-- O frontend ainda não foi implementado; os badges e a estrutura indicam a stack planejada.
+- O frontend está no setup inicial; telas reais, formulários e consumo de dados entram nos próximos passos.
 - `SyncState` prepara a sincronização incremental por `syncToken`, mas a API externa testada não retornou um token funcional para check-ins.
 - Circuit Breaker com Resilience4j não foi implementado; o retry atual é limitado e cobre `429` e `503`.
 - WebSocket/SSE não foi implementado.
@@ -571,7 +611,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 
 | Requisito | Status |
 |---|---|
-| Utilizar Next.js 16 com App Router | Não iniciado |
+| Utilizar Next.js 16 com App Router | Implementado no setup inicial |
 | Utilizar WebClient | Implementado |
 | Implementar os 4 schedulers obrigatórios | Implementado |
 | Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações, check-ins e geofences |
@@ -589,6 +629,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Testes automatizados | Implementado |
 | Swagger/OpenAPI | Implementado |
 | Dockerização do backend + MySQL | Implementado |
+| Setup Next.js/Tailwind/shadcn/TanStack Query | Implementado |
 | Circuit Breaker com Resilience4j | Não iniciado |
 | WebSocket/SSE | Não iniciado |
 | Mapa interativo com Leaflet | Não iniciado |

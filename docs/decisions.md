@@ -552,7 +552,7 @@ Adicionar um `Dockerfile` multi-stage para o backend e ajustar o `docker-compose
 ### Justificativa
 
 - O backend usa build multi-stage: uma etapa com JDK 17 e Maven Wrapper para gerar o JAR, e uma etapa runtime com Java 17 para executar a aplicação.
-- O frontend ainda não foi incluído no Docker porque ainda não começou; criar um serviço vazio aumentaria complexidade sem benefício.
+- O frontend ainda não foi incluído no Docker porque está no setup inicial local; dockerizá-lo antes das telas reais aumentaria complexidade sem benefício imediato.
 - O backend continua configurado por variáveis de ambiente, sem criar profile Spring específico para Docker.
 - O MySQL possui `healthcheck` para indicar quando está realmente pronto para conexões.
 - O backend usa `depends_on` com `condition: service_healthy`, evitando que ele tente conectar antes do MySQL estar saudável.
@@ -565,7 +565,7 @@ Adicionar um `Dockerfile` multi-stage para o backend e ajustar o `docker-compose
 - O avaliador consegue subir banco e backend com um único comando.
 - O ambiente Docker fica mais próximo de uma implantação real simples.
 - A execução local fora do Docker continua possível usando as mesmas variáveis de ambiente.
-- Um serviço de frontend poderá ser adicionado ao compose depois, quando a aplicação Next.js existir.
+- Um serviço de frontend poderá ser adicionado ao compose depois, quando as telas reais estiverem implementadas.
 
 ---
 
@@ -597,3 +597,36 @@ Considerar o backend congelado para novas features antes do início do frontend.
 - Novas features backend ficam fora do escopo imediato.
 - Bugs críticos e ajustes pequenos continuam permitidos.
 - Mudanças de contrato HTTP devem ser evitadas, salvo necessidade clara.
+
+---
+
+## Decisão 017 — Setup inicial do frontend com Next.js 16
+
+**Data:** 2026-05-24
+
+**Status:** Aceita
+
+### Contexto
+
+Com o backend validado e congelado para novas features, o projeto passa a precisar de uma base frontend estável para consumir os endpoints públicos já implementados. O objetivo deste passo é preparar a fundação técnica sem iniciar dashboard real, mapa, CRUD visual ou formulários completos.
+
+### Decisão
+
+Criar o frontend do zero em `frontend/` usando Next.js 16, TypeScript, App Router, Tailwind CSS, shadcn/ui, TanStack Query, React Hook Form e Zod. O package manager escolhido foi `npm` para reduzir atrito de execução para o avaliador.
+
+### Justificativa
+
+- Next.js 16 com App Router atende ao requisito do desafio e favorece rotas organizadas por arquivo.
+- Server Components serão o padrão; Client Components ficam restritos a providers, interações, formulários, TanStack Query e componentes que dependam do browser.
+- TanStack Query será usado para estado servidor, cache e invalidação de dados vindos do backend.
+- shadcn/ui fornece uma base visual consistente sem criar um design system próprio neste momento.
+- React Hook Form e Zod foram instalados desde o setup para preparar os formulários dos próximos passos.
+- `NEXT_PUBLIC_API_BASE_URL` centraliza a URL do backend para o frontend.
+- O backend recebeu um ajuste mínimo de CORS para permitir `http://localhost:3000`, necessário para integração via navegador.
+
+### Consequências
+
+- O frontend já possui layout base, navegação e páginas placeholder.
+- As próximas etapas podem focar telas reais em vez de infraestrutura.
+- O backend continua congelado para novas features; o CORS é tratado como ajuste necessário de integração.
+- O frontend ainda não foi incluído no Docker, evitando complexidade antes das telas reais.

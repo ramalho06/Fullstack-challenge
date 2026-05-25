@@ -52,6 +52,8 @@ external:
 # Os schedulers são gatilhos automáticos para os mesmos services usados
 # pelos endpoints manuais em /api/v1/sync/*.
 app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
   schedulers:
     enabled: ${APP_SCHEDULERS_ENABLED:true}
     agents-fixed-delay-ms: 600000
