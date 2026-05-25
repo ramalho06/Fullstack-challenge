@@ -17,6 +17,24 @@
 
 Sistema de rastreamento de equipes externas em tempo real, com integração a API GPS, sincronização automática de dados e monitoramento operacional.
 
+## Sumário
+
+- [Visão Geral](#visao-geral)
+- [Tecnologias](#tecnologias)
+- [Pré-requisitos](#pre-requisitos)
+- [Como Rodar](#como-rodar)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Documentação](#documentacao)
+- [Documentação da API](#documentacao-da-api)
+- [Frontend](#frontend)
+- [Fluxo recomendado de validação](#fluxo-recomendado-de-validacao)
+- [Decisões Técnicas](#decisoes-tecnicas)
+- [Limitações conhecidas](#limitacoes-conhecidas)
+- [Estado dos Requisitos Importantes](#estado-dos-requisitos-importantes)
+- [Diferenciais Implementados](#diferenciais-implementados)
+- [Segurança](#seguranca)
+
+<a id="visao-geral"></a>
 ## 📋 Visão Geral
 
 O sistema permite:
@@ -27,6 +45,7 @@ O sistema permite:
 - Monitoramento operacional
 - Histórico de rotas e check-ins
 
+<a id="tecnologias"></a>
 ## 🛠️ Tecnologias
 
 ### Backend
@@ -49,6 +68,7 @@ O sistema permite:
 | shadcn/ui | Componentes de UI |
 | Leaflet + react-leaflet | Mapa, rotas e geofencing visual |
 
+<a id="pre-requisitos"></a>
 ## ⚙️ Pré-requisitos
 
 - **Java 17+** ([download](https://adoptium.net/))
@@ -57,6 +77,7 @@ O sistema permite:
 - **Docker e Docker Compose** ([download](https://www.docker.com/products/docker-desktop/))
 - **Git**
 
+<a id="como-rodar"></a>
 ## 🚀 Como Rodar
 
 ### 1. Clonar o repositório
@@ -498,6 +519,7 @@ Regras aplicadas:
 - A resposta inclui `fixedDelayMs` e `initialDelayMs` lidos de `SchedulerProperties`.
 - `errorMessage` é resumido e não expõe stacktrace.
 
+<a id="estrutura-do-projeto"></a>
 ## 📁 Estrutura do Projeto
 
 ```
@@ -537,11 +559,13 @@ teams-tracking-system/
 └── README.md
 ```
 
+<a id="documentacao"></a>
 ## 📚 Documentação
 
 - [Decisões Arquiteturais](docs/decisions.md) — Registro de decisões técnicas do projeto (ADRs).
 - [Exemplos de uso da API](docs/api-examples.md) — Coleção de comandos `curl` para validar os endpoints principais.
 
+<a id="documentacao-da-api"></a>
 ## 📖 Documentação da API
 
 A documentação OpenAPI é gerada via `springdoc-openapi` e fica disponível com o backend em execução:
@@ -561,6 +585,7 @@ Os endpoints estão agrupados por domínio:
 
 O Swagger documenta DTOs públicos, exemplos dos principais endpoints e o contrato padronizado de erro (`ApiErrorResponse`). Ele não expõe `EXTERNAL_API_KEY`, variáveis de ambiente sensíveis ou headers internos. A API ainda não possui autenticação neste desafio, por isso nenhum `securityScheme` foi configurado.
 
+<a id="frontend"></a>
 ## 🖥️ Frontend
 
 A rota `/` renderiza o dashboard operacional mínimo. Ela consome APIs reais do backend usando TanStack Query:
@@ -580,7 +605,7 @@ O dashboard mostra:
 - tabela de últimas sincronizações;
 - tabela de localizações atuais.
 
-Os dados são atualizados periodicamente via `refetchInterval`. O dashboard é somente leitura: não possui mapa, gráficos ou botões de sync manual.
+Os dados são atualizados periodicamente via `refetchInterval`. O dashboard é somente leitura e não concentra mapa, gráficos ou botões de sync manual; o mapa fica na rota `/map`.
 
 As telas essenciais também já estão disponíveis:
 
@@ -594,6 +619,7 @@ Formulários usam React Hook Form + Zod, mutations usam TanStack Query e ações
 
 As geofences são exibidas na rota `/map`: `CIRCLE` é renderizado como `Circle`, `POLYGON` é renderizado como `Polygon`, e o `coordinatesJson` recebido em `[longitude, latitude]` é convertido para o formato esperado pelo Leaflet, `[latitude, longitude]`. Geofences inválidas são ignoradas defensivamente para não quebrar o mapa. Ainda não há gráficos, botões de sync manual, rotas de detalhe, SSE/WebSocket ou alertas reais de entrada/saída em geofences.
 
+<a id="fluxo-recomendado-de-validacao"></a>
 ## 🧪 Fluxo recomendado de validação
 
 Para validar o backend do zero:
@@ -618,6 +644,7 @@ curl "http://localhost:8080/api/v1/sync/status"
 
 Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os principais casos de uso ficam verificáveis.
 
+<a id="decisoes-tecnicas"></a>
 ## 🧭 Decisões Técnicas
 
 - O backend foi iniciado antes do frontend para reduzir cedo o risco de integração, persistência e sincronização.
@@ -633,14 +660,16 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 - O acesso à API externa fica isolado atrás de gateways/clients em `external/`, sem misturar DTO externo com entidade JPA.
 - Retries de API externa são limitados e preparados para `429` com `Retry-After` e `503` com backoff exponencial e jitter.
 
+<a id="limitacoes-conhecidas"></a>
 ## ⚠️ Limitações conhecidas
 
-- O frontend possui dashboard mínimo, telas essenciais e mapa com consumo real de APIs, mas rotas de detalhe e telas mais analíticas ainda entram nos próximos passos.
+- O frontend possui dashboard mínimo, telas essenciais e mapa com consumo real de APIs, mas rotas de detalhe e telas analíticas avançadas ficaram fora do escopo final.
 - `SyncState` prepara a sincronização incremental por `syncToken`, mas a API externa testada não retornou um token funcional para check-ins.
 - Circuit Breaker com Resilience4j não foi implementado; o retry atual é limitado e cobre `429` e `503`.
 - WebSocket/SSE não foi implementado.
 - Geofencing visual é apenas leitura: o mapa desenha áreas sincronizadas, mas não edita geofences nem executa alertas reais de entrada/saída.
 
+<a id="estado-dos-requisitos-importantes"></a>
 ## ✅ Estado dos Requisitos Importantes
 
 | Requisito | Status |
@@ -666,6 +695,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Geofencing visual | Implementado |
 | README e documentação técnica | Implementado |
 
+<a id="diferenciais-implementados"></a>
 ## 🌟 Diferenciais Implementados
 
 | Diferencial | Status |
@@ -681,6 +711,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Circuit Breaker com Resilience4j | Não iniciado |
 | WebSocket/SSE | Não iniciado |
 
+<a id="seguranca"></a>
 ## 🔐 Segurança
 
 - Nenhuma credencial ou API Key é armazenada no código-fonte.
