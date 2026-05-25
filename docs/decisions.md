@@ -630,3 +630,36 @@ Criar o frontend do zero em `frontend/` usando Next.js 16, TypeScript, App Route
 - As próximas etapas podem focar telas reais em vez de infraestrutura.
 - O backend continua congelado para novas features; o CORS é tratado como ajuste necessário de integração.
 - O frontend ainda não foi incluído no Docker, evitando complexidade antes das telas reais.
+
+---
+
+## Decisão 018 — Dashboard frontend consumindo APIs reais
+
+**Data:** 2026-05-25
+
+**Status:** Aceita
+
+### Contexto
+
+Depois do setup inicial do frontend, era necessário provar a integração real com o backend antes de avançar para telas mais complexas como CRUD visual, mapa e formulários. O dashboard é a primeira tela útil para validar consumo de APIs, estados de carregamento, estados de erro e atualização periódica.
+
+### Decisão
+
+Implementar o dashboard operacional mínimo na rota `/`, consumindo endpoints reais do backend para agentes, localizações atuais, status de sincronização e últimas execuções.
+
+### Justificativa
+
+- A rota `/` passa a ser a visão operacional principal do sistema.
+- TanStack Query foi usado para estado servidor, cache e refetch periódico.
+- `refetchInterval` substitui SSE/WebSocket neste momento, mantendo o escopo simples e suficiente para uma visão operacional inicial.
+- Cards e tabelas foram priorizados antes de gráficos e mapa, porque validam a integração com menor complexidade.
+- O dashboard é somente leitura e observabilidade; ações manuais de sync ficam fora deste passo.
+- Leaflet e mapa interativo permanecem para uma etapa posterior.
+- shadcn/ui foi usado para cards, tabelas, badges e skeletons, mantendo consistência visual com a base do frontend.
+
+### Consequências
+
+- O frontend passa a demonstrar comunicação real com o backend.
+- O avaliador consegue ver métricas e dados operacionais sem depender do Swagger ou de `curl`.
+- A arquitetura de services e hooks fica preparada para as próximas telas.
+- O dashboard ainda não executa ações, não exibe mapa e não implementa formulários.

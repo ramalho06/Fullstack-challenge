@@ -39,7 +39,7 @@ O sistema permite:
 | Spring WebFlux | - | WebClient (HTTP reativo) |
 | MySQL | 8.0 | Banco de dados relacional |
 
-### Frontend *(setup inicial)*
+### Frontend
 | Tecnologia | Finalidade |
 |---|---|
 | Next.js 16 | Framework React (App Router) |
@@ -186,7 +186,7 @@ O backend libera CORS para `http://localhost:3000` por padrão. Para alterar as 
 APP_CORS_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-O frontend está no setup inicial: layout base, navegação, providers, shadcn/ui, TanStack Query e páginas placeholder. As telas reais entram nos próximos passos.
+O frontend já possui layout base, navegação, providers, shadcn/ui, TanStack Query e dashboard inicial na rota `/`. O dashboard consome dados reais do backend para métricas operacionais, últimas sincronizações e localizações atuais.
 
 ### 8. Sincronizar agentes manualmente
 
@@ -560,6 +560,27 @@ Os endpoints estão agrupados por domínio:
 
 O Swagger documenta DTOs públicos, exemplos dos principais endpoints e o contrato padronizado de erro (`ApiErrorResponse`). Ele não expõe `EXTERNAL_API_KEY`, variáveis de ambiente sensíveis ou headers internos. A API ainda não possui autenticação neste desafio, por isso nenhum `securityScheme` foi configurado.
 
+## 🖥️ Frontend
+
+A rota `/` renderiza o dashboard operacional mínimo. Ela consome APIs reais do backend usando TanStack Query:
+
+- `GET /api/v1/agents?page=0&size=100`
+- `GET /api/v1/locations`
+- `GET /api/v1/sync/status`
+- `GET /api/v1/sync/executions/latest`
+
+O dashboard mostra:
+
+- total de agentes;
+- agentes ativos;
+- agentes online;
+- última sincronização com sucesso;
+- falhas de sincronização;
+- tabela de últimas sincronizações;
+- tabela de localizações atuais.
+
+Os dados são atualizados periodicamente via `refetchInterval`. Nesta etapa não há mapa, gráficos, botões de sync manual, CRUD visual ou formulários reais.
+
 ## 🧪 Fluxo recomendado de validação
 
 Para validar o backend do zero:
@@ -601,7 +622,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 
 ## ⚠️ Limitações conhecidas
 
-- O frontend está no setup inicial; telas reais, formulários e consumo de dados entram nos próximos passos.
+- O frontend possui dashboard mínimo com consumo real de APIs, mas CRUD visual, formulários e telas detalhadas ainda entram nos próximos passos.
 - `SyncState` prepara a sincronização incremental por `syncToken`, mas a API externa testada não retornou um token funcional para check-ins.
 - Circuit Breaker com Resilience4j não foi implementado; o retry atual é limitado e cobre `429` e `503`.
 - WebSocket/SSE não foi implementado.
@@ -611,7 +632,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 
 | Requisito | Status |
 |---|---|
-| Utilizar Next.js 16 com App Router | Implementado no setup inicial |
+| Utilizar Next.js 16 com App Router | Implementado |
 | Utilizar WebClient | Implementado |
 | Implementar os 4 schedulers obrigatórios | Implementado |
 | Persistir histórico de sincronização | Parcial: `SyncExecution` registra sync de agentes, localizações, check-ins e geofences |
@@ -620,6 +641,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Aplicar regras de negócio do documento | Parcial: upsert de agentes/geofences, idempotência, descarte de GPS impreciso, sync de check-ins, CRUD de agentes, check-in manual e rota do dia |
 | Garantir tratamento adequado de erros e retries | Parcial: implementado nos clients de agentes, localizações, check-ins e geofences |
 | Monitoramento operacional da sincronização | Implementado |
+| Dashboard frontend mínimo | Implementado |
 | Documentar decisões técnicas no README | Implementado com resumo e link para ADRs |
 
 ## 🌟 Diferenciais Implementados
@@ -630,6 +652,7 @@ Com esse fluxo, o MySQL sobe limpo, o Flyway valida/aplica as migrations e os pr
 | Swagger/OpenAPI | Implementado |
 | Dockerização do backend + MySQL | Implementado |
 | Setup Next.js/Tailwind/shadcn/TanStack Query | Implementado |
+| Dashboard frontend com dados reais | Implementado |
 | Circuit Breaker com Resilience4j | Não iniciado |
 | WebSocket/SSE | Não iniciado |
 | Mapa interativo com Leaflet | Não iniciado |

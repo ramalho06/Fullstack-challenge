@@ -2,7 +2,7 @@ import { apiFetch } from "@/services/api";
 import type { Agent, AgentFilters } from "@/types/agent";
 import type { PageResponse } from "@/types/api";
 
-export function listAgents(filters: AgentFilters = {}) {
+export function getAgents(filters: AgentFilters = {}) {
   const params = new URLSearchParams();
 
   Object.entries(filters).forEach(([key, value]) => {
@@ -17,3 +17,5 @@ export function listAgents(filters: AgentFilters = {}) {
     `/api/v1/agents${query ? `?${query}` : ""}`,
   );
 }
+
+export const listAgents = getAgents;
